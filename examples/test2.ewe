@@ -1,0 +1,4 @@
+a: a := 10
+b: goto a
+h: halt
+equ a M[0]
