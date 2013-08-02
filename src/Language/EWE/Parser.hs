@@ -65,12 +65,21 @@ pEweProg = do stms    <- pStms
               return $ Prg stms equates
 
 pStms :: Parser Stmts
-pStms = endBy1 pLabelInstr pEOL
+pStms = endBy1 pLabelInstr newline
+
+pLabel :: Parser String
+pLabel = do l  <- letter 
+            ls <- many letter
+            char ':'
+	    many space
+	    return $ (l:ls)
+         <?> "Parsing label"
 
 pLabelInstr :: Parser Stmt
-pLabelInstr = do labels <- many (pIdentifier >>= \id -> pColon >> return id)
+pLabelInstr = do labels <- many (pLabel >>= \id -> return $ id)
                  instr <- pInstr
                  return $ Stmt labels instr
+              <?> "Parsing label instruction"
 
 pInstr :: Parser Instr
 pInstr = do instr <- choice [pPCInstr, pStartWithMRefInstr, pIMMR, pReadInt
