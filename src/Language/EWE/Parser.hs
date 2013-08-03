@@ -50,6 +50,9 @@ pParens = P.parens eweLexer
 pColon :: Parser String
 pColon = P.colon eweLexer
 
+pString :: Parser String
+pString = P.stringLiteral eweLexer
+
 pComma :: Parser String
 pComma = P.comma eweLexer
 
@@ -64,11 +67,17 @@ pEweProg = do stms    <- pStms
               equates <- pEquates
               return $ Prg stms equates
 
+pComment :: Parser ()
+pComment = do char '#'
+              many (noneOf ['\n','\r'])
+              pEOL
+              return ()
+
 pStms :: Parser Stmts
-pStms = endBy1 pLabelInstr newline
+pStms = endBy1 pLabelInstr pEOL
 
 pLabel :: Parser String
-pLabel = do l  <- letter 
+pLabel = do l  <- letter
             ls <- many letter
             char ':'
 	    many space
@@ -76,10 +85,11 @@ pLabel = do l  <- letter
          <?> "Parsing label"
 
 pLabelInstr :: Parser Stmt
-pLabelInstr = do labels <- many (pLabel >>= \id -> return $ id)
+pLabelInstr = do labels <- many pLabel
                  instr <- pInstr
                  return $ Stmt labels instr
               <?> "Parsing label instruction"
+
 
 pInstr :: Parser Instr
 pInstr = do instr <- choice [pPCInstr, pStartWithMRefInstr, pIMMR, pReadInt
@@ -100,11 +110,11 @@ pBreak = do pReserved "break"
 
 pGoto :: Parser Instr
 pGoto = do pReserved "goto"
-           (do i <- pInteger
-               return $ IGI (fromInteger i) )
-           <|>
-           (do s <- pIdentifier
-               return $ IGS s)
+           pEndGoto
+           
+pEndGoto :: Parser Instr
+pEndGoto = (pInteger >>= \i -> return $ IGI (fromInteger i))
+         <|> (pIdentifier >>= \s -> return $ IGS s)
 
 pIf :: Parser Instr
 pIf = do pReserved "if"
@@ -197,7 +207,7 @@ pNextToMRef mr1 =
   do i <- pInteger
      return $ IMMI mr1 (fromInteger i)
   <|>
-  do s <- pIdentifier
+  do s <- pString
      return $ IMMS mr1 s
   <|>
   do pReserved "PC"
@@ -207,6 +217,7 @@ pNextToMRef mr1 =
   <|>
   do mr2 <- pMRef
      option (IMMM mr1 mr2) (pNextTo2MRef mr1 mr2)
+
 
 pNextTo2MRef :: MRef -> MRef -> Parser Instr
 pNextTo2MRef mr1 mr2 =
@@ -247,10 +258,3 @@ pEqu = do pReserved "equ"
           pReserved "M"
           i <- pBrackets pInteger
           return (id, (fromInteger i))
-
-
-pExecInstr :: String -> String -> IO ()
-pExecInstr inp name = do
-  case (parse pInstr name inp) of
-    Left err -> print err
-    Right xs -> print xs
