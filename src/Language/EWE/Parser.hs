@@ -2,12 +2,12 @@ module Language.EWE.Parser where
 
 import System.IO
 import Control.Monad
+-- import Data.Char hiding(isSpace)
 import Text.Parsec
 import Text.ParserCombinators.Parsec
 import qualified Text.Parsec.Token as P
 import Text.Parsec.Language
 import Language.EWE.AbsSyn
-
 
 eweDef :: P.LanguageDef st
 eweDef = emptyDef
@@ -26,6 +26,9 @@ eweDef = emptyDef
                                ,"equ", "M"]
          , P.caseSensitive   = True
          }
+
+simpleSpace :: Parser  ()
+simpleSpace = skipMany1 (satisfy (\c -> c == ' '))
 
 eweLexer = P.makeTokenParser eweDef
 
