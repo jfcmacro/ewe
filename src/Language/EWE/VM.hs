@@ -109,7 +109,7 @@ execInstr (IMRI mrr mr  i) state =
   in state { mem = inMem (mRef mrr ge') v' m''
            , pc  = incrPC state
            }
-execInstr (IMMR mri mr i) state =
+execInstr (IMMR mri i mr) state =
   let m         = mem state
       ge'       = ge state
       (m', v)   = outMem (mRef mr ge') m

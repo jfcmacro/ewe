@@ -2,7 +2,7 @@
 -- see http://haskell.org/cabal/users-guide/
 
 name:                ewe
-version:             0.1.0.3
+version:             0.1.0.4
 synopsis:            Another implementions of the EWE programming language originally developed by Kent D. Lee. EWE was an extension of the RAM programming language created by Sethi.
 -- description:
 homepage:            http://www1.eafit.edu.co/fcardona/cursos/st0244/proyectos/ewe

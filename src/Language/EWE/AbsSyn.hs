@@ -40,7 +40,7 @@ data Instr = IMMI MRef Int       -- Move Memory Int
            | IDiv MRef MRef MRef -- Div two Memory References
            | IMod MRef MRef MRef -- Mod two Memory References
            | IMRI MRef MRef Int  -- Move to Memory ref a Indexed Memory Pos
-           | IMMR MRef MRef Int  -- Move to Index Memory Ref a Memory Ref
+           | IMMR MRef Int  MRef -- Move to Index Memory Ref a Memory Ref
            | IRI  MRef           -- Read an Int and stored into a Mem Ref
            | IWI  MRef           -- Write an Int from a Mem Ref
            | IRS  MRef MRef      -- Read a Str
@@ -51,5 +51,6 @@ data Instr = IMMI MRef Int       -- Move Memory Int
            | IFS  MRef Cond MRef String --
            | IH                  -- Halt
            | IB                  -- Break
+           | INI
             deriving (Eq,Show)
 
