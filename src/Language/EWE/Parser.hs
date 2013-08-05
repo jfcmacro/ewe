@@ -1,4 +1,4 @@
-module Language.EWE.Parser2 where
+module Language.EWE.Parser where
 
 import System.IO
 import Control.Monad
@@ -78,7 +78,7 @@ pStmts :: Parser Stmts
 pStmts = many1 pStmtLine
 
 pLabel :: Parser String
-pLabel = do id <- pId 
+pLabel = do id <- pId
             char ':'
 	    return $ id
          <?> "Parsing label"
@@ -108,13 +108,13 @@ pLabels = pLabel `sepBy` ((many (char ' ') >> return ()) <|> pEOL)
 -- Instructions parsers
 -- <instr> ::= ...
 pInstr :: Parser Instr
-pInstr = do instr <- choice [pPCInstr
+pInstr = do instr <- choice [pPrefixMRef
+                            ,pPCInstr
                             ,pRead
                             ,pWrite
                             ,pGoto
                             ,pIf
                             ,pOneKw
-                            ,pPrefixMRef
                             ]
             return instr
 
@@ -241,7 +241,7 @@ pPrefixMRef =
      pTokenB $ string ":="
      either pIMMR pNextRHS op
   <|>
-  (pTokenB pId >>= \id -> pToken $ string ":=" >> pNextRHS (MRefId id))
+  (pTokenB pId >>= \id -> pTokenB $ string ":=" >> (pTokenB $ pNextRHS (MRefId id)))
 
 pIMMR :: (MRef,Int) -> Parser Instr
 pIMMR (mr1,i) =
@@ -251,12 +251,16 @@ pIMMR (mr1,i) =
 
 pNextRHS :: MRef -> Parser Instr
 pNextRHS mr1 =
+  (pToken pInt >>= \i -> return $ IMMI mr1 i)
+  <|>
+  (pToken pId >>= \id -> pEndRHS mr1 (MRefId id))
+  <|>
+  (pToken pStrLit >>= \str -> return $ IMMS mr1 str)
+  <|>
   do pToken $ char 'M'
      op <- between (char '[') (char ']') (pTokenB pMRefOrIdx')
      either (\(mr2,i) -> return $ IMRI mr1 mr2 i) (pEndRHS mr1) op
-  <|>
-  (pTokenB pId >>= \id -> pEndRHS mr1 (MRefId id))
-
+  
 pEndRHS :: MRef -> MRef -> Parser Instr
 pEndRHS mr1 mr2 = option (IMMM mr1 mr2) (pPartialArith mr1 mr2)
 
@@ -428,11 +432,20 @@ pInt :: Parser Int
 pInt = do l  <- oneOf "123456789"
           ls <- many digit
           return $ (read (l:ls))
+      <|> 
+       do l <- oneOf "0"
+          pSpaces
+          return $ (read (l:[]))
 
 pId :: Parser String
 pId = do l <- (letter <|> char '_')
          ls <- many (alphaNum <|> char '_')
          return $ l:ls
+
+pStrLit :: Parser String
+pStrLit = between (char '"') (char '"') (many $ noneOf "\"")
+          <|>
+          between (char '\'') (char '\'') (many $ noneOf "'")
 
 pToken :: Parser a -> Parser a
 pToken p = (p >>= \a -> many (char ' ') >> return a )
