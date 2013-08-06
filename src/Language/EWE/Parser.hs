@@ -2,62 +2,11 @@ module Language.EWE.Parser where
 
 import System.IO
 import Control.Monad
--- import Data.Char hiding(isSpace)
 import Text.Parsec
-import Text.ParserCombinators.Parsec
-import qualified Text.Parsec.Token as P
-import Text.Parsec.Language
+import Text.ParserCombinators.Parsec hiding(try)
 import Language.EWE.AbsSyn
 
-eweDef :: P.LanguageDef st
-eweDef = emptyDef
-         { P.commentLine     = "#"
-         , P.nestedComments  = False
-         , P.identStart      = letter
-         , P.identLetter     = alphaNum
-         , P.reservedOpNames = [">=", ">", "<=", "<", "=", "<>"
-                               ,"+", "-", "*", "/", "%", ":="]
-         , P.reservedNames   = ["PC"
-                               ,"readInt", "writeInt"
-                               ,"readStr", "writeStr"
-                               ,"goto"
-                               ,"if", "then"
-                               ,"halt","break"
-                               ,"equ", "M"]
-         , P.caseSensitive   = True
-         }
 
-simpleSpace :: Parser  ()
-simpleSpace = skipMany1 (satisfy (\c -> c == ' '))
-
-eweLexer = P.makeTokenParser eweDef
-
-pIdentifier :: Parser String
-pIdentifier = P.identifier eweLexer
-
-pReserved :: String -> Parser ()
-pReserved = P.reserved eweLexer
-
-pReservedOp :: String -> Parser ()
-pReservedOp = P.reservedOp eweLexer
-
-pInteger :: Parser Integer
-pInteger = P.integer eweLexer
-
-pBrackets :: Parser a -> Parser a
-pBrackets = P.brackets eweLexer
-
-pParens :: Parser a -> Parser a
-pParens = P.parens eweLexer
-
-pColon :: Parser String
-pColon = P.colon eweLexer
-
-pString :: Parser String
-pString = P.stringLiteral eweLexer
-
-pComma :: Parser String
-pComma = P.comma eweLexer
 
 -- Parser of EWE Language
 pEWE:: String -> String -> IO Prog
@@ -95,18 +44,9 @@ pStmtLine = (pComment >> (return $ Stmt [] INI))
                (pComment <|> pEOL)
                return $ Stmt labels instr
 
--- Labeled instruction parsers
--- <labeled instruction> ::= Identifier ":" <labeled instruction> | <instr>
-
 pLabels :: Parser [String]
 pLabels = pLabel `sepBy` ((many (char ' ') >> return ()) <|> pEOL)
 
--- pLabelInstr :: Parser Stmt
--- pLabelInstr = do labels <- pLabel `sepBy` (spaces <|> pEOL)
---                  tab
---                  instr <- pInstr
---                  return $ Stmt labels instr
---               <?> "Parsing label instruction"
 
 -- Instructions parsers
 -- <instr> ::= ...
@@ -225,18 +165,6 @@ pInstr1MRef f =
 pEOL :: Parser ()
 pEOL = (char '\n' >> return ()) <|> (string "\r\n" >> return ())
 
--- <memref> ":=" Integer
--- AbsSyn
--- <memref> ":=" String
--- <memref< ":=
--- pPrefixMRef
-
--- The rest of instructions has a two common prefixes: "M [" and Ident
--- Then there are tree options: "M [ <memref> ...
---                              "M [ Integer ...
---                              "Ident
--- The first sub-parser manages the first two options.
--- The second sub-parser manages the last one
 pPrefixMRef :: Parser Instr
 pPrefixMRef =
   do pTokenB $ char 'M'
@@ -285,138 +213,6 @@ pMRefOrIdx' = do mr <- pTokenB pMRef2
               <|>
               (pTokenB pInt >>= \i -> return $ Right (MRefI i))
 
--- pStartWithMRefInstr :: Parser Instr
--- pStartWithMRefInstr =
---   do pReserved "M"
---      op <- pBrackets pMRefOrIdx
---      pReservedOp ":="
---      case op of
---        Left  mr     -> pNextToMRef mr
---        Right (mr,i) -> pNextToIdx mr i
---  <|>
---   do id <- pIdentifier
---      pReservedOp ":="
---      pNextToMRef (MRefId id)
-
--- pMRefReadStr :: Parser (MRef,MRef)
--- pMRefReadStr = do mra <- pMRef
---                   pComma
---                   mrb <- pMRef
---                   return (mra, mrb)
-
--- pWriteStr :: Parser Instr
--- pWriteStr = do pReserved "writeStr"
---                mr <- pParens pMRef
---                return $ IWS mr
-
--- pPCInstr :: Parser Instr
--- pPCInstr = do pReserved "PC"
---               pReservedOp ":="
---               mr <- pMRef
---               return $ SPC mr
-
--- pCond :: Parser Cond
--- pCond = do pReservedOp "<="
---            return $ CLET
---         <|>
---         do pReservedOp "<"
---            return $ CLT
---         <|>
---         do pReservedOp ">="
---            return $ CGET
---         <|>
---         do pReservedOp ">"
---            return $ CGT
---         <|>
---         do pReservedOp "="
---            return $ CE
---         <|>
---         do pReservedOp "<>"
---            return $ CNE
-
--- pIMMRref :: Parser (MRef, Int)
--- pIMMRref = do mr <- pMRef
---               pReservedOp "+"
---               i <- pInteger
---               return (mr, (fromInteger i))
-
--- pStartWithMRefInstr :: Parser Instr
--- pStartWithMRefInstr =
---   do pReserved "M"
---      op <- pBrackets pMRefOrIdx
---      pReservedOp ":="
---      case op of
---        Left  mr     -> pNextToMRef mr
---        Right (mr,i) -> pNextToIdx mr i
---  <|>
---   do id <- pIdentifier
---      pReservedOp ":="
---      pNextToMRef (MRefId id)
-
--- pNextToMRef :: MRef -> Parser Instr
--- pNextToMRef mr1 =
---   do i <- pInteger
---      return $ IMMI mr1 (fromInteger i)
---   <|>
---   do s <- pString
---      return $ IMMS mr1 s
---   <|>
---   do pReserved "PC"
---      pReservedOp "+"
---      i <- pInteger
---      return $ IMRPC mr1 (fromInteger i)
---   <|>
---   do pReserved "M"
---      op <- pBrackets pMRefOrIdx
---      case op of
---        Left  mr2     -> pNextTo2MRef mr1 mr2
---        Right (mr2,i) -> return $ IMMR  mr1 i mr2
---   <|>
---   do id <- pIdentifier
---      pNextTo2MRef mr1 (MRefId id)
-
--- pNextTo2MRef :: MRef -> MRef -> Parser Instr
--- pNextTo2MRef mr1 mr2 =
---   option (IMMM mr1 mr2)
---          (do pReservedOp "+"
---              mr3 <- pMRef
---              return $ IAdd mr1 mr2 mr3
---           <|>
---           do pReservedOp "-"
---              mr3 <- pMRef
---              return $ ISub mr1 mr2 mr3
---           <|>
---           do pReservedOp "*"
---              mr3 <- pMRef
---              return $ IMul mr1 mr2 mr3
---           <|>
---           do pReservedOp "/"
---              mr3 <- pMRef
---              return $ IDiv mr1 mr2 mr3
---           <|>
---           do pReservedOp "%"
---              mr3 <- pMRef
---              return $ IMod mr1 mr2 mr3)
-
--- pNextToIdx :: MRef -> Int -> Parser Instr
--- pNextToIdx mr1 i = pMRef >>= \mr2 -> return $ IMMR mr1 i mr2
-
--- pMRefOrIdx :: Parser (Either MRef (MRef,Int))
--- pMRefOrIdx = (pInteger >>= \i -> return $ Left (MRefI (fromInteger i)))
---              <|>
---              (pIdentifier >>= \id -> pIdOrIx id)
---              <|>
---              (do pReserved "M"
---                  i  <- pBrackets pInteger
---                  pReservedOp "+"
---                  i' <- pInteger
---                  return $ Right (MRefI (fromInteger i), (fromInteger i))
---              )
-
--- pIdOrIx :: String -> Parser (Either MRef (MRef,Int))
--- pIdOrIx id = option (Left (MRefId id))
---              (pInteger >>= \i -> return $ Right (MRefId id, (fromInteger i)))
-
 pMRef2 :: Parser MRef
 pMRef2 = do char 'M'
             pSpaces
@@ -462,20 +258,47 @@ pTokenB p = do many (char ' ')
 pSpaces :: Parser ()
 pSpaces =  many (char ' ') >> return ()
 
--- pMRef :: Parser MRef
--- pMRef = do pReserved "M"
---            i <- pBrackets pInteger
---            return $ MRefI (fromInteger i)
---         <|>
---         do id <- pIdentifier
---            return $ MRefId id
+pEquates = undefined
 
-pEquates :: Parser Equates
-pEquates = many pEqu >>= \equates -> return equates
+-- Basic Parsers for compiling assemble files
+pOneLineComment :: Parser ()
+pOneLineComment = do try (string "#")
+                     skipMany (satisfy (/= '\n'))
+                     return ()
 
-pEqu :: Parser Equ
-pEqu = do pReserved "equ"
-          id <- pIdentifier
-          pReserved "M"
-          i <- pBrackets pInteger
-          return (id, (fromInteger i))
+pSimpleSpace :: Parser  ()
+pSimpleSpace = skipMany1 (satisfy (\c -> c == ' '))
+
+pWhiteSpace :: Parser ()
+pWhiteSpace = skipMany (pSimpleSpace <?> "")
+
+pLexeme :: Parser a -> Parser a
+pLexeme p = do r <- p
+               pWhiteSpace
+               return r
+
+-- 
+pReservedWords :: [String]
+pReservedWords = ["PC"
+                 ,"M"
+                 ,"readInt"
+                 ,"writeInt"
+                 ,"readStr"
+                 ,"writeStr"
+                 ,"goto"
+                 ,"if"
+                 ,"then"
+                 ,"halt"
+                 ,"break"
+                 ,"equ"]
+--
+
+pSymbol :: String -> Parser String
+pSymbol name = pLexeme $ string name
+
+pParens :: Parser a -> Parser a
+pParens = between (pSymbol "(") (pSymbol ")") 
+
+pBrackets :: Parser a -> Parser a
+pBrackets = between (pSymbol "[") (pSymbol "]")
+
