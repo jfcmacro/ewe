@@ -6,39 +6,22 @@ import Text.Parsec
 import Text.Parsec.Prim
 import Text.ParserCombinators.Parsec hiding(try)
 import Language.EWE.AbsSyn
+import Language.EWE.EweLang(eweLangDef)
 import qualified Language.EWE.Token as Tkn
+                    
+-- Parser generates from the language
+pEweLexer = Tkn.makeTokenParser eweLangDef
 
--- EWE Language definition
-
-eweLangDef :: Tkn.LanguageDef st
-eweLangDef = Tkn.LanguageDef {
-  Tkn.commentStart = "",
-  Tkn.commentEnd   = "",
-  Tkn.commentLine  = "#",
-  Tkn.nestedComments = False,
-  Tkn.identStart     = letter <|> char '_',
-  Tkn.identLetter    = alphaNum <|> oneOf "_'",
-  Tkn.opStart        = oneOf ":!#$%&*+./<=>?@\\^|-~",
-  Tkn.opLetter       = oneOf ":!#$%&*+./<=>?@\\^|-~",
-  Tkn.reservedNames  = ["PC",
-                        "M",
-                        "writeInt",
-                        "writeStr",
-                        "readInt",
-                        "readStr",
-                        "halt",
-                        "break",
-                        "if",
-                        "goto",
-                        "then",
-                        "equ"],
-  Tkn.reservedOpNames = ["+", "-", "*", "/",
-                         "%", "<", ">=", "<=",
-                         ">", "<>"],
-  Tkn.caseSensitive   = False
-  }
-                       
-
+pIdentifier = Tkn.identifier pEweLexer
+pReserved   = Tkn.reserved   pEweLexer
+pReservedOp = Tkn.reservedOp pEweLexer
+pParens     = Tkn.parens     pEweLexer
+pBrackets   = Tkn.brackets   pEweLexer
+pInteger    = Tkn.integer    pEweLexer
+pComma      = Tkn.comma      pEweLexer
+pWhiteSpace = Tkn.whiteSpace pEweLexer
+pSymbol     = Tkn.symbol     pEweLexer
+pLexeme     = Tkn.lexeme     pEweLexer
 
 -- Parser of EWE Language
 pEWE:: String -> String -> IO Prog
@@ -56,43 +39,42 @@ pStmts :: Parser Stmts
 pStmts = many1 pStmtLine
 
 pLabel :: Parser String
-pLabel = do id <- 
+pLabel = do id <- pId
             char ':'
 	    return $ id
          <?> "Parsing label"
 
 pStmtLine :: Parser Stmt
-pStmtLine = (pComment >> (return $ Stmt [] INI))
-            <|>
-            do labels <- pLabels
+pStmtLine = do l <- pLabels
                char '\t'
-               instr <- pInstr
-               (pComment <|> pEOL)
-               return $ Stmt labels instr
+               ins <- pInstr
+               pEOL
+               return $ Stmt l ins
 
 pLabels :: Parser [String]
-pLabels = pLabel `sepBy` ((many (char ' ') >> return ()) <|> pEOL)
+pLabels = pLabel `sepBy` pWhiteSpace
 
 
 -- Instructions parsers
 -- <instr> ::= ...
 pInstr :: Parser Instr
-pInstr = do instr <- choice [pPrefixMRef
-                            ,pPCInstr
-                            ,pRead
-                            ,pWrite
+pInstr = do instr <- choice [pPCInstr
+                            ,pReadInt
+                            ,pReadStr
+                            ,pWriteInt
+                            ,pWriteStr
                             ,pGoto
                             ,pIf
                             ,pOneKw
+                            ,pPrefixMRef
                             ]
             return instr
 
 -- "PC" ":=" <memref>
 -- AbsSyn SPC (Set PC instruction)
 pPCInstr :: Parser Instr
-pPCInstr = do string "PC"
-              pSpaces
-              string ":="
+pPCInstr = do pReserved"PC"
+              pReservedOp ":="
               mr <- pMRef2
               return $ SPC mr
 
@@ -101,39 +83,58 @@ pPCInstr = do string "PC"
 -- "readStr" "(" <memref> ")"
 -- AbsSyn IRS Instruction Read String
 
-pRead :: Parser Instr
-pRead = do string "read"
-           (string "Int" >> pReadInt) <|> (string "Str" >> pReadStr)
+-- pRead :: Parser Instr
+-- pRead = do string "read"
+--            (string "Int" >> pReadInt) <|> (string "Str" >> pReadStr)
 
+-- pReadInt :: Parser Instr
+-- pReadInt = pInstr1MRef IRI
+
+-- pReadStr :: Parser Instr
+-- pReadStr = do pSpaces
+--               (mr1, mr2) <- pTokenB pReadMRefs
+--               pSpaces
+--               return $ IRS mr1 mr2
 pReadInt :: Parser Instr
-pReadInt = pInstr1MRef IRI
+pReadInt = do pReserved "readInt"
+              mr <- pParens pMRef2
+              return $ IRI mr
 
 pReadStr :: Parser Instr
-pReadStr = do pSpaces
-              (mr1, mr2) <- pTokenB pReadMRefs
-              pSpaces
+pReadStr = do pReserved "readStr"
+              (mr1,mr2) <- pParens p
               return $ IRS mr1 mr2
+  where p = do { mr1 <- pMRef2 ; pComma; mr2 <- pMRef2 ; return $ (mr1,mr2) }
 
 -- "writeStr" "(" <memref> ")"
 -- AbsSyn IWS Instruction Write String
 -- "writeInt" "(" <memref> ")"
 -- AbsSyn IWI Instruction Write Int
-pWrite :: Parser Instr
-pWrite = do string "write"
-            (string "Int" >> pWriteInt) <|> (string "Str" >> pWriteStr)
+-- pWrite :: Parser Instr
+-- pWrite = do string "write"
+--             (string "Int" >> pWriteInt) <|> (string "Str" >> pWriteStr)
 
+-- pWriteInt :: Parser Instr
+-- pWriteInt = pInstr1MRef IWI
+
+-- pWriteStr :: Parser Instr
+-- pWriteStr = pInstr1MRef IWS
 pWriteInt :: Parser Instr
-pWriteInt = pInstr1MRef IWI
+pWriteInt = do pReserved "writeInt"
+               mr <- pParens pMRef2
+               return $ IWI mr
 
 pWriteStr :: Parser Instr
-pWriteStr = pInstr1MRef IWS
+pWriteStr = do pReserved "writeStr"
+               mr <- pParens pMRef2
+               return $ IWS mr
 
 -- "goto" Integer
 -- "goto" Identifier
 -- AbsSyn IGI Goto to line
 -- AbsSyn IGS Goto to Symbol
 pGoto:: Parser Instr
-pGoto = do pTokenB $ string "goto"
+pGoto = do pReserved "goto"
            iOrId <- pTknIntOrId
            let instr = either IGI IGS iOrId
            return instr
@@ -143,26 +144,15 @@ pGoto = do pTokenB $ string "goto"
 -- AbsSyn IFI If Cond then Int
 -- AbsSyn IFS If Cont then Id
 pIf :: Parser Instr
-pIf = do pTokenB $ string "if"
-         mr1 <- pTokenB pMRef2
-         cnd <- pTokenB pCond
-         mr2 <- pTokenB pMRef2
-         pTokenB $ string "then"
-         pTokenB $ string "goto"
+pIf = do pReserved "if"
+         mr1 <- pMRef2
+         cnd <- pCond
+         mr2 <- pMRef2
+         pReserved "then"
+         pReserved "goto"
          iOrId <- pTknIntOrId
          let instr = either (IFI mr1 cnd mr2) (IFS mr1 cnd mr2) iOrId
          return instr
-
-listCond :: [(String,Cond)]
-listCond = [(">",CLT)
-           ,(">=",CLET)
-           ,("<",CGT)
-           ,("<=",CGET)
-           ,("=",CE)
-           ,("<>",CNE)]
-
-pCond :: Parser Cond
-pCond = choice $ map (\(s,r) -> (pTokenB (string s) >> return r)) listCond
 
 -- "halt"
 -- "break"
@@ -173,49 +163,44 @@ listOneKw = [("halt", IH), ("break", IB)]
 
 pOneKw :: Parser Instr
 pOneKw = choice
-         $ map (\(s,r) -> (pTokenB (string s) >> return r)) listOneKw
+         $ map (\(s,r) -> (pReserved s >> return r)) listOneKw
 
 pReadMRefs :: Parser (MRef,MRef)
-pReadMRefs = do between( char '(') (char ')')
-                  (do mr1 <- pTokenB pMRef2
-                      pTokenB (char ',')
-                      mr2 <- pTokenB pMRef2
-                      return $ (mr1, mr2))
+pReadMRefs = do pParens (do mr1 <- pMRef2
+                            pComma
+                            mr2 <- pMRef2
+                            return $ (mr1, mr2))
 
 pInstr1MRef :: (MRef -> Instr) -> Parser Instr
 pInstr1MRef f =
-  do pSpaces
-     mr <- between (char '(')  (char ')') (pTokenB pMRef2)
+  do mr <- pParens pMRef2
      return $ f mr
-
-pEOL :: Parser ()
-pEOL = (char '\n' >> return ()) <|> (string "\r\n" >> return ())
 
 pPrefixMRef :: Parser Instr
 pPrefixMRef =
-  do pTokenB $ char 'M'
-     op <- between (char '[') (char ']') (pTokenB pMRefOrIdx')
-     pTokenB $ string ":="
+  do pReserved "M"
+     op <- pBrackets pMRefOrIdx'
+     pReservedOp ":="
      either pIMMR pNextRHS op
   <|>
-  (pTokenB pId >>= \id -> pTokenB $ string ":=" >> (pTokenB $ pNextRHS (MRefId id)))
+  (pLexeme pId >>= \id ->  pReservedOp ":=" >> (pNextRHS (MRefId id)))
 
 pIMMR :: (MRef,Int) -> Parser Instr
 pIMMR (mr1,i) =
-  do pTokenB $ string ":="
-     mr2 <- pTokenB $ pMRef2
+  do pReservedOp ":="
+     mr2 <- pMRef2
      return $ IMMR mr1 i mr2
 
 pNextRHS :: MRef -> Parser Instr
 pNextRHS mr1 =
-  (pToken pInt >>= \i -> return $ IMMI mr1 i)
+  (pLexeme pInt >>= \i -> return $ IMMI mr1 i)
   <|>
-  (pToken pId >>= \id -> pEndRHS mr1 (MRefId id))
+  (pLexeme pId >>= \id -> pEndRHS mr1 (MRefId id))
   <|>
-  (pToken pStrLit >>= \str -> return $ IMMS mr1 str)
+  (pLexeme pStrLit >>= \str -> return $ IMMS mr1 str)
   <|>
-  do pToken $ char 'M'
-     op <- between (char '[') (char ']') (pTokenB pMRefOrIdx')
+  do pReserved "M"
+     op <- pBrackets (pTokenB pMRefOrIdx')
      either (\(mr2,i) -> return $ IMRI mr1 mr2 i) (pEndRHS mr1) op
   
 pEndRHS :: MRef -> MRef -> Parser Instr
@@ -227,31 +212,21 @@ listAOps = [("+",IAdd), ("-",ISub), ("*",IMul), ("/",IDiv), ("%",IMod)]
 pPartialArith :: MRef -> MRef -> Parser Instr
 pPartialArith mr1 mr2 =
   choice $ map g listAOps
-  where g (s,f) = pTokenB (string s)
-                  >> pTokenB pMRef2
+  where g (s,f) = pReservedOp s
+                  >> pMRef2
                   >>= \mr3 -> return $ f mr1 mr2 mr3
 
 pMRefOrIdx' :: Parser (Either (MRef,Int) MRef)
-pMRefOrIdx' = do mr <- pTokenB pMRef2
-                 pTokenB (char '+')
-                 i <- pTokenB pInt
-                 return $ Left (mr,i)
+pMRefOrIdx' = do mr <- pMRef2
+                 pReservedOp "+"
+                 i <- pInteger -- i <- pInt
+                 return $ Left (mr,(fromInteger i))
               <|>
-              (pTokenB pInt >>= \i -> return $ Right (MRefI i))
+              (pInteger >>= \i -> return $ Right (MRefI (fromInteger i)))
 
-pMRef2 :: Parser MRef
-pMRef2 = do char 'M'
-            pSpaces
-            i <- between (char '[') (char ']') (pTokenB pInt)
-            pSpaces
-            return $ MRefI i
-         <|>
-         (pTokenB pId >>= \id -> return $ MRefId id)
-         <?>
-         "pMRef2"
-
+-- Helpers parser to identify an integer or identifier
 pTknIntOrId :: Parser (Either Int String)
-pTknIntOrId = (pTokenB pInt >>= return.Left) <|> (pTokenB pId >>= return.Right)
+pTknIntOrId = (pLexeme pInt >>= return.Left) <|> (pLexeme pId >>= return.Right)
 
 pInt :: Parser Int
 pInt = do l  <- oneOf "123456789"
@@ -259,7 +234,7 @@ pInt = do l  <- oneOf "123456789"
           return $ (read (l:ls))
       <|> 
        do l <- oneOf "0"
-          pSpaces
+          notFollowedBy digit
           return $ (read (l:[]))
 
 pId :: Parser String
@@ -267,11 +242,13 @@ pId = do l <- (letter <|> char '_')
          ls <- many (alphaNum <|> char '_')
          return $ l:ls
 
+-- String Literal Parser
 pStrLit :: Parser String
-pStrLit = between (char '"') (char '"') (many $ noneOf "\"")
+pStrLit = between (pSymbol "\"") (pSymbol "\"") (many $ p)
           <|>
-          between (char '\'') (char '\'') (many $ noneOf "'")
-
+          between (pSymbol "'") (pSymbol "'") (many $ p)
+  where p = oneOf " :!#$%&*+./<=>?@\\^|-~()[]" <|> digit <|> letter 
+-- Parser candidates to delete, because are deprecated
 pToken :: Parser a -> Parser a
 pToken p = (p >>= \a -> many (char ' ') >> return a )
 
@@ -284,47 +261,46 @@ pTokenB p = do many (char ' ')
 pSpaces :: Parser ()
 pSpaces =  many (char ' ') >> return ()
 
-pEquates = undefined
+-- MemRef
+pMRef2 :: Parser MRef
+pMRef2 = do pReserved "M"
+            i<- pBrackets pInteger
+            return $ (MRefI (fromInteger i))
+         <|>
+         (pIdentifier >>= (return.MRefId))
+         <?>
+         "pMRef2"
+
+-- Equates
+pEqu :: Parser Equ
+pEqu = do pReserved "equ"
+          id <- pIdentifier
+          pReserved "M"
+          i  <- pBrackets pInteger
+          return $ (id,(fromInteger i))
+
+pEquates :: Parser Equates
+pEquates = do{ equates <- sepBy pEqu (pWhiteSpace <|> pEOL); eof; return equates }
+
+
+-- Cond
+listCond :: [(String,Cond)]
+listCond = [(">",CLT)
+           ,(">=",CLET)
+           ,("<",CGT)
+           ,("<=",CGET)
+           ,("=",CE)
+           ,("<>",CNE)]
+
+pCond :: Parser Cond
+pCond = choice $ map (\(s,r) -> (pReservedOp s >> return r)) listCond
+
+-- End of Line parser
+pEOL :: Parser ()
+pEOL = (char '\n' >> return ()) <|> (string "\r\n" >> return ())
 
 -- Basic Parsers for compiling assemble files
 pOneLineComment :: Parser ()
 pOneLineComment = do try (string "#")
                      skipMany (satisfy (/= '\n'))
                      return ()
-
-pSimpleSpace :: Parser  ()
-pSimpleSpace = skipMany1 (satisfy (\c -> c == ' '))
-
-pWhiteSpace :: Parser ()
-pWhiteSpace = skipMany (pSimpleSpace <?> "")
-
-pLexeme :: Parser a -> Parser a
-pLexeme p = do r <- p
-               pWhiteSpace
-               return r
-
--- 
-pReservedWords :: [String]
-pReservedWords = ["PC"
-                 ,"M"
-                 ,"readInt"
-                 ,"writeInt"
-                 ,"readStr"
-                 ,"writeStr"
-                 ,"goto"
-                 ,"if"
-                 ,"then"
-                 ,"halt"
-                 ,"break"
-                 ,"equ"]
---
-
-pSymbol :: String -> Parser String
-pSymbol name = pLexeme $ string name
-
-pParens :: Parser a -> Parser a
-pParens = between (pSymbol "(") (pSymbol ")") 
-
-pBrackets :: Parser a -> Parser a
-pBrackets = between (pSymbol "[") (pSymbol "]")
-

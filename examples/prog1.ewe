@@ -3,6 +3,6 @@
 	one := 1
 	c := b + one
 	a := b * c
-	writeInt(c)
+	writeInt(a)
 	halt
 equ a M[O] b M[1] c M[2] one M[3]
