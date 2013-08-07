@@ -3,9 +3,41 @@ module Language.EWE.Parser where
 import System.IO
 import Control.Monad
 import Text.Parsec
+import Text.Parsec.Prim
 import Text.ParserCombinators.Parsec hiding(try)
 import Language.EWE.AbsSyn
+import qualified Language.EWE.Token as Tkn
 
+-- EWE Language definition
+
+eweLangDef :: Tkn.LanguageDef st
+eweLangDef = Tkn.LanguageDef {
+  Tkn.commentStart = "",
+  Tkn.commentEnd   = "",
+  Tkn.commentLine  = "#",
+  Tkn.nestedComments = False,
+  Tkn.identStart     = letter <|> char '_',
+  Tkn.identLetter    = alphaNum <|> oneOf "_'",
+  Tkn.opStart        = oneOf ":!#$%&*+./<=>?@\\^|-~",
+  Tkn.opLetter       = oneOf ":!#$%&*+./<=>?@\\^|-~",
+  Tkn.reservedNames  = ["PC",
+                        "M",
+                        "writeInt",
+                        "writeStr",
+                        "readInt",
+                        "readStr",
+                        "halt",
+                        "break",
+                        "if",
+                        "goto",
+                        "then",
+                        "equ"],
+  Tkn.reservedOpNames = ["+", "-", "*", "/",
+                         "%", "<", ">=", "<=",
+                         ">", "<>"],
+  Tkn.caseSensitive   = False
+  }
+                       
 
 
 -- Parser of EWE Language
@@ -20,17 +52,11 @@ pEweProg = do stms    <- pStmts
               equates <- pEquates
               return $ Prg stms equates
 
-pComment :: Parser ()
-pComment = do char '#'
-              many (noneOf ['\n','\r'])
-              pEOL
-              return ()
-
 pStmts :: Parser Stmts
 pStmts = many1 pStmtLine
 
 pLabel :: Parser String
-pLabel = do id <- pId
+pLabel = do id <- 
             char ':'
 	    return $ id
          <?> "Parsing label"
