@@ -1,5 +1,4 @@
 # Este test verifica el manejo de los labels
-a:     a := 10
-b:     goto a
-h:     halt
-equ a M[0]
+a:	a := 10
+b:	goto a
+h:	halt

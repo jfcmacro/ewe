@@ -50,6 +50,10 @@ pStmtLine = do l <- pLabels
                ins <- pInstr
                pEOL
                return $ Stmt l ins
+            <|>
+              do pWhiteSpace
+                 pEOL
+                 return $ Stmt [] INI
 
 pLabels :: Parser [String]
 pLabels = pLabel `sepBy` pWhiteSpace
@@ -303,4 +307,10 @@ pEOL = (char '\n' >> return ()) <|> (string "\r\n" >> return ())
 pOneLineComment :: Parser ()
 pOneLineComment = do try (string "#")
                      skipMany (satisfy (/= '\n'))
+                     char '\n'
                      return ()
+
+pEmptyLine :: Parser ()
+pEmptyLine = do pWhiteSpace
+                char '\n'
+                return ()
