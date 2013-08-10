@@ -5,4 +5,4 @@
 	a := b * c
 	writeInt(a)
 	halt
-equ a M[O] b M[1] c M[2] one M[3]
+equ a M[0] equ b M[1] equ c M[2] equ one M[3]
