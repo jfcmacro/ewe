@@ -31,12 +31,13 @@ pEWE inp name = do
     Right prog -> return prog
 
 pEweProg :: Parser Prog
-pEweProg = do stms    <- pStmts
-              equates <- pEquates
-              return $ Prg stms equates
+pEweProg = pStmts
 
-pStmts :: Parser Stmts
-pStmts = many1 pStmtLine
+pStmts :: Parser Prog
+pStmts = do res <- sepEndBy pStmtLine pEOL 
+            let (eq',st') = foldr f ([],[]) res
+            return $ Prg st' eq'
+            where f (e,s) (e',s') = (e++e',s:s')
 
 pLabel :: Parser String
 pLabel = do id <- pId
@@ -44,16 +45,18 @@ pLabel = do id <- pId
 	    return $ id
          <?> "Parsing label"
 
-pStmtLine :: Parser Stmt
-pStmtLine = do l <- pLabels
+pStmtLine :: Parser (Equates, Stmt)
+pStmtLine = do eqs <- pEquates
+               return $ (eqs, Stmt [] INI)
+            <|>
+            do l <- pLabels
                char '\t'
                ins <- pInstr
-               pEOL
-               return $ Stmt l ins
+               return $ ([], Stmt l ins)
             <|>
-              do pWhiteSpace
-                 pEOL
-                 return $ Stmt [] INI
+            do pWhiteSpace
+               return $ ([], Stmt [] INI)
+            
 
 pLabels :: Parser [String]
 pLabels = pLabel `sepBy` pWhiteSpace

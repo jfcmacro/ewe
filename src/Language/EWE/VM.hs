@@ -17,6 +17,9 @@ emptyMemory = []
 
 type PC = Int
 
+initPC :: PC
+initPC = 0
+
 data StateVM = StVM { mem :: Memory
                     , prg :: Prog
                     , pc  :: PC
@@ -74,6 +77,8 @@ evalInstr = do
     else put st'
 
 execInstr :: Instr -> StateVM -> StateVM
+execInstr (INI)       state =
+  state { pc = incrPC state }
 execInstr (IMMI mr i) state =
   state { mem = inMem (mRef mr (ge state)) i (mem state)
         , pc  = incrPC state
