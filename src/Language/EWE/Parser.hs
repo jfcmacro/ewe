@@ -24,11 +24,8 @@ pSymbol     = Tkn.symbol     pEweLexer
 pLexeme     = Tkn.lexeme     pEweLexer
 
 -- Parser of EWE Language
-pEWE:: String -> String -> IO Prog
-pEWE inp name = do
-  case (parse pEweProg name inp) of
-    Left  err  -> error (show err)
-    Right prog -> return prog
+pEWE:: String -> String -> Either ParseError Prog
+pEWE inp name = parse pEweProg name inp
 
 pEweProg :: Parser Prog
 pEweProg = pStmts
