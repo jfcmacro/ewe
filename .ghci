@@ -1,2 +1,2 @@
 :set editor emacs
-:set -iusr/:.
+:set -iusr/ -idist/build/autogen

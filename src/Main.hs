@@ -12,24 +12,39 @@ import Language.EWE.Parser
 import Language.EWE.AbsSyn
 import Language.EWE.VM(runVM,execVM)
 
-data Flag = EweVersion | EweExec deriving Show
+data Options =  Options { optShowVersion :: Bool
+                        , optExec :: Bool
+                        , optDebug :: Bool
+                        } deriving Show
 
-options :: [OptDescr Flag]
+defaultOptions :: Options 
+defaultOptions = Options { optShowVersion = False
+                         , optExec = False
+                         , optDebug = False
+                         }
+
+options :: [OptDescr (Options -> Options)]
 options =
-  [ Option ['V','?'] ["version"] (NoArg EweVersion) "show version number"
-  , Option ['x'] ["exec"] (NoArg EweExec)
+  [ Option ['V','?'] ["version"] 
+    (NoArg (\opts -> opts { optShowVersion  = True })) 
+    "show version number"
+  , Option ['x'] ["exec"] 
+    (NoArg (\opts -> opts { optExec = True }))
     "execute the current file with ewe-vm"
+  , Option ['d'] ["debug"] 
+    (NoArg (\opts -> opts { optDebug = True }))
+    "show debug information"
   ]
 
-compilerOpts :: [String] -> IO ([Flag], [String])
+compilerOpts :: [String] -> IO (Options, [String])
 compilerOpts argv =
   case getOpt Permute options argv of
-    (o,n,[]) -> return (o,n)
+    (o,n,[]) -> return (foldl (flip id) defaultOptions o,n)
     (_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
     where header = "Usage: ewe [OPTION...] files..."
 
-processFile :: Bool -> FilePath -> IO ()
-processFile exec fp = do
+processFile :: Options -> FilePath -> IO ()
+processFile opts fp = do
   hPutStr stdout $ "Processing file: " ++ fp
   fh   <- openFile fp ReadMode
   s    <- hGetContents fh
@@ -37,29 +52,24 @@ processFile exec fp = do
   case pRes of
     Left err   -> hPutStrLn stderr $ " Parsing error at " ++ (show err)
     Right prog -> do hPutStrLn stdout $ " is Ok"
-                     if exec
+                     if optExec opts 
                        then do hPutStrLn stdout $ show prog
                                r <- execVM prog
-                               -- hPutStrLn stdout $ show r
-                               return ()
+                               if (optDebug opts) 
+                                then hPutStrLn stdout $ show r
+                                else return ()
                        else return ()
   hClose fh
 
-processFlags :: [Flag] -> IO Bool
-processFlags flags = do
-  ls <- mapM processFlag flags
-  return $ and ls 
-
-processFlag :: Flag -> IO Bool
-processFlag EweVersion = do
-  hPutStrLn stdout $ "ewe version: " ++ (showVersion version)
-  exitSuccess
-  return True
-processFlag EweExec = return True
+processStaticOptions :: Options -> IO ()
+processStaticOptions opts = 
+  if optShowVersion opts 
+  then hPutStrLn stdout $ "ewe version: " ++ (showVersion version)
+  else return ()                     
 
 main :: IO ()
 main = do
-  (flgs, fls) <- (getArgs >>= compilerOpts)
-  exec <- processFlags flgs
-  mapM_ (processFile exec) fls
+  (opts, fls) <- (getArgs >>= compilerOpts)
+  processStaticOptions opts
+  mapM_ (processFile opts) fls
   return ()
