@@ -1,5 +1,5 @@
 
-module Language.EWE.VM where
+module Language.EWE.VM(runVM,execVM) where
 
 import Language.EWE.AbsSyn
 import qualified Data.List as L
@@ -7,7 +7,7 @@ import qualified Data.Maybe as M
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Class(lift)
 import Data.Char (ord,chr)
-import System.IO(hFlush, stdout)
+import System.IO(hFlush, stdout,hPutStrLn,hPutStr)
 import System.Exit(exitWith,ExitCode(..))
 
 type Memory = [(Int,Int)]
@@ -23,9 +23,28 @@ initPC = 0
 data StateVM = StVM { mem :: Memory
                     , prg :: Prog
                     , pc  :: PC
+                    } deriving (Show)
+
+emptyStateVM = StVM { mem = emptyMemory
+                    , pc  = initPC
+                    , prg = emptyProg
                     }
 
 type StateVMM = StateT StateVM IO
+
+runVM :: Prog -> IO () 
+runVM prg = evalStateT evalVM (initVM prg)
+
+execVM :: Prog -> IO StateVM
+execVM prg = execStateT evalVM (initVM prg)
+
+evalVM :: StateVMM ()
+evalVM = do
+  lift $ hPutStrLn stdout "Iniciando maquina"
+  evalInstr
+  
+initVM :: Prog -> StateVM
+initVM p = emptyStateVM { prg = p }
 
 mRef :: MRef -> Equates -> Int
 mRef (MRefI i) _  = i
@@ -60,21 +79,26 @@ evalInstr = do
              i <- lift $ readInt "Enter an integer:"
              let st'' = execIRI i ci st
              put st''
+             evalInstr
          (IWI _)   -> do
              let (st'',i) = execIWI ci st
              lift $ putStrLn (show i)
              put st''
+             evalInstr
          (IRS _ _) -> do
            s <- lift $ getLine
            let st'' = execIRS s ci st
            put st''
+           evalInstr
          (IWS _) -> do
              let (st'',s) = execIWS ci st
              lift $ putStrLn s
              put st''
-         (IH)      -> lift $ exitWith ExitSuccess
-         (IB)      -> lift $ exitWith ExitSuccess
-    else put st'
+             evalInstr
+         (IH)      -> return ()
+         (IB)      -> return ()
+    else do put st'
+            evalInstr
 
 execInstr :: Instr -> StateVM -> StateVM
 execInstr (INI)       state =

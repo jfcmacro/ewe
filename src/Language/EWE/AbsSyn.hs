@@ -1,4 +1,13 @@
-module Language.EWE.AbsSyn where
+module Language.EWE.AbsSyn(MRef(..)
+                          ,Cond(..)
+                          ,Equ
+                          ,Equates
+                          ,Labels
+                          ,Stmt(..)
+                          ,Stmts
+                          ,Prog(..)
+                          ,Instr(..)
+                          ,emptyProg) where
 
 data AbsSyn = Empty
 
@@ -54,3 +63,7 @@ data Instr = IMMI MRef Int       -- Move Memory Int
            | INI
             deriving (Eq,Show)
 
+emptyProg :: Prog
+emptyProg = Prg { stms = []
+                , equates = []
+                }

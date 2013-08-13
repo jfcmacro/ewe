@@ -197,15 +197,15 @@ pIMMR (mr1,i) =
 
 pNextRHS :: MRef -> Parser Instr
 pNextRHS mr1 =
+  do pReserved "M"
+     op <- pBrackets (pTokenB pMRefOrIdx')
+     either (\(mr2,i) -> return $ IMRI mr1 mr2 i) (pEndRHS mr1) op
+  <|>
   (pLexeme pInt >>= \i -> return $ IMMI mr1 i)
   <|>
   (pLexeme pId >>= \id -> pEndRHS mr1 (MRefId id))
   <|>
   (pLexeme pStrLit >>= \str -> return $ IMMS mr1 str)
-  <|>
-  do pReserved "M"
-     op <- pBrackets (pTokenB pMRefOrIdx')
-     either (\(mr2,i) -> return $ IMRI mr1 mr2 i) (pEndRHS mr1) op
   
 pEndRHS :: MRef -> MRef -> Parser Instr
 pEndRHS mr1 mr2 = option (IMMM mr1 mr2) (pPartialArith mr1 mr2)

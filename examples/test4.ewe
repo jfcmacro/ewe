@@ -1,0 +1,3 @@
+	readInt(M[0])
+	writeInt(M[0])
+	halt

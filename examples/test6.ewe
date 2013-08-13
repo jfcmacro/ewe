@@ -1,0 +1,6 @@
+	writeInt(M[0])
+	writeInt(M[1])
+	writeInt(M[2])
+	writeInt(M[3])
+	writeInt(M[3])
+	halt
