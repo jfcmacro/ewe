@@ -1,0 +1,24 @@
+# int a=0
+	R0:=0	#load 0 into R0
+	M[SP+12]:=R0
+# int b = 5;
+	R1:=5	#load 5 into R1
+	M[SP+13]:=R1
+# int c = b+1;
+	R2:=SP	# b+1
+	R2:=M[R2+13]	#load b into R2
+	R3:=1	# load 1 into R3
+	R2:=R2+R3
+	M[SP+14]:=R2
+# a = b*c;
+	R4:=SP	# b*c
+	R4:=M[R4+13] # load b into R4
+	R5:=SP
+	R5:=M[R5+14] # load c into R5
+	R4:= R4*R5
+	R6:=SP
+	M[R6+12]:=R4
+	R7:=M[SP+12]
+	writeInt(R7)
+	halt
+equ SP M[10] equ R0 M[0] equ R1 M[0] equ R2 M[0] equ R3 M[1] equ R4 M[0] equ R5 M[1] equ R6 M[1] equ R7 M[0]
