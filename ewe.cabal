@@ -23,7 +23,9 @@ executable ewe
                        mtl >= 2.1
   hs-source-dirs:      src
   other-modules:       Language.EWE.Parser, Language.EWE.AbsSyn,
-                       Language.EWE.VM, Language.EWE.Token, Language.EWE.EweLang
+                       Language.EWE.VM, Language.EWE.Token, 
+                       Language.EWE.EweLang, Language.EWE.Tokens,
+                       Language.EWE.Scanner
 
 source-repository head
   type:	    git

@@ -9,6 +9,7 @@ import Control.Monad.State(get)
 pTknChar :: Char -> Tkn -> Parser Token
 pTknChar c tkn = do (,) <$> getPos <*> oneOf [c]
 
+pTknLPar, pTknRPar, pTknLBrk, pTknRBrk :: Parser Token
 pTknLPar = pTnkChar '(' TknLPar
 pTknRPar = pTknChar ')' TknRPar
 pTknLBrk = pTknChar '[' TknLBrk
