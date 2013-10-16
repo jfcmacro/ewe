@@ -1,4 +1,3 @@
-# Este test verifica el manejo de los labels
-a:	a := 10
-b:	goto a
-h:	halt
+a:      a := 10
+b:      goto a
+h:      halt

@@ -16,4 +16,5 @@ data Tkn = TknInt   Int
          | TknCond   String
          | TknResWrd String
          | TknEOL
+         | TknEOF
              deriving (Show, Eq)

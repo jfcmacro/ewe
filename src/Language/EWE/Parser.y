@@ -1,13 +1,17 @@
 {
-module Language.EWE.Parser where
+{-# OPTIONS -w #-}
+module Language.EWE.Parser(pEWE) where
 
 import Language.EWE.Token(Tkns,Tkn(..))
+import Language.EWE.Scanner
 import Language.EWE.AbsSyn
 }
 
-%name pEWE
+%name parse
 %tokentype { Tkn }
 %error     { parseError }
+%monad { Alex } 
+%lexer { lexwrap } { TknEOF }
 
 %token int        { TknInt $$ }
        str        { TknStr $$ }  
@@ -91,10 +95,25 @@ Cond : '>='                                       { CLET }
 
 {
 
+lexwrap :: (Tkn -> Alex a) -> Alex a
+lexwrap cont = do
+   t <- alexMonadScan
+   cont t
+
+getPosn :: Alex (Int,Int)
+getPosn = do
+ (AlexPn _ l c,_,_,_) <- alexGetInput
+ return (l,c)
+
 addLabel :: String -> Stmt -> Stmt
 addLabel s (Stmt ss i) = Stmt (s:ss) i
 
-parseError :: Tkns -> a
-parseError lst = error $ "Parse error: " ++ (show lst) 
+parseError :: Tkn -> Alex a
+parseError t = do
+  (l,c) <- getPosn
+  fail (show l ++ ":" ++ show c ++ ": Parser error on Token: " ++ show t ++ "\n")
+
+pEWE :: String -> Either String Prog
+pEWE s = runAlex s parse
 }
 

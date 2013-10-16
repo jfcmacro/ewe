@@ -1,10 +1,16 @@
 {
-module Language.EWE.Scanner where
+module Language.EWE.Scanner(Alex(..),
+                            AlexPosn(..),
+                            alexMonadScan,
+                            alexExec,
+                            runAlex,
+                            alexGetInput
+                           ) where
 
-import Language.EWE.Token
+import Language.EWE.Token(Tkns,Tkn(..))
 }
 
-%wrapper "posn"
+%wrapper "monad"
 
 $alpha       = [a-zA-Z]
 $digit       = [0-9]
@@ -17,29 +23,91 @@ $graphic     = $printable
 tokens :-
 
        $white+                      ;
-       \t                           ;
-       @eol                         { \s -> TknEOL }
-       M                            { \s -> TknResWrd s}
-       PC                           { \s -> TknRewWrd s}
-       readInt                      { \s -> TknRewWrd s}
-       writeInt                     { \s -> TknRewWrd s}
-       readStr                      { \s -> TknRewWrd s}
-       writeStr                     { \s -> TknRewWrd s}
-       goto                         { \s -> TknRewWrd s}
-       if                           { \s -> TknRewWrd s}
-       then                         { \s -> TknRewWrd s}
-       halt                         { \s -> TknRewWrd s}
-       break                        { \s -> TknRewWrd s}
-       \:\=                         { \s -> TknAssgn }
-       equ                          { \s -> TknRewWrd s}
-       [\*\+\-\/\%]                 { \s -> TknOper (head s)}
-       \(                           { \s -> TknLPar}
-       \)                           { \s -> TknRPar }
-       \[                           { \s -> TknLBrk }
-       \]                           { \s -> TknRBrk }
-       \,                           { \s -> TknComma }
-       (\>|\>\=|\<|\<\=|\=|\<\>)    { \s -> TknCond s}
-       \"($alpha $digit)*\"         { \s -> TknStr s }
-       (($nozerodigit $digit*)| 0)  { \s -> TknInt (read s) }
-       $alpha [$alpha $digit]*\:    { \s -> TknLabel s }
-       $alpha [$alpha $digit]       { \s -> TknId s } 
+       \#.*                         ;
+       \n                           { returnEOL }
+       \:\=                         { returnAssgn }
+       [\*\+\-\/\%]                 { returnOper }
+       \(                           { returnLPar}
+       \)                           { returnRPar }
+       \[                           { returnLBrk }
+       \]                           { returnRBrk }
+       \,                           { returnComma }
+       (\>|\>\=|\<|\<\=|\=|\<\>)    { returnCond }
+       "M"                          { returnResWrd }
+       "PC"                         { returnResWrd }
+       "readInt"                    { returnResWrd }
+       "writeInt"                   { returnResWrd }
+       "readStr"                    { returnResWrd }
+       "writeStr"                   { returnResWrd }
+       "goto"                       { returnResWrd }
+       "if"                         { returnResWrd }
+       "then"                       { returnResWrd }
+       "halt"                       { returnResWrd }
+       "break"                      { returnResWrd }
+       "equ"                        { returnResWrd }
+--       \"($alpha $digit)*\"       { returnStr }
+       \" [^\"]* \"                 { returnStr }
+       (($nozerodigit $digit*)| 0)  { returnInt }
+       $alpha [$alpha $digit]*\:    { returnLabel }
+       $alpha [$alpha $digit]       { returnId }
+
+{
+returnEOL :: AlexInput -> Int -> Alex Tkn
+returnEOL = returnTkn $ TknEOL
+
+returnAssgn :: AlexInput -> Int -> Alex Tkn
+returnAssgn = returnTkn $ TknAssgn
+
+returnTkn :: Tkn -> AlexInput -> Int -> Alex Tkn
+returnTkn tkn _ _ = return $ tkn
+
+returnLPar :: AlexInput -> Int -> Alex Tkn
+returnLPar = returnTkn $ TknLPar
+
+returnRPar :: AlexInput -> Int -> Alex Tkn
+returnRPar = returnTkn $ TknRPar
+
+returnLBrk :: AlexInput -> Int -> Alex Tkn
+returnLBrk = returnTkn $ TknLBrk
+
+returnRBrk :: AlexInput -> Int -> Alex Tkn
+returnRBrk = returnTkn $ TknRBrk
+
+returnComma :: AlexInput -> Int -> Alex Tkn
+returnComma = returnTkn $ TknComma
+
+returnOper :: AlexInput -> Int -> Alex Tkn
+returnOper = returnFunction (TknOper . head)
+
+returnCond :: AlexInput -> Int -> Alex Tkn
+returnCond = returnFunction TknCond
+
+returnStr :: AlexInput -> Int -> Alex Tkn
+returnStr = returnFunction (TknStr . read)
+
+returnInt :: AlexInput -> Int -> Alex Tkn
+returnInt = returnFunction (TknInt . read)
+
+returnLabel :: AlexInput -> Int -> Alex Tkn
+returnLabel = returnFunction TknLabel
+
+returnId :: AlexInput -> Int -> Alex Tkn
+returnId = returnFunction TknId
+
+returnResWrd :: AlexInput -> Int -> Alex Tkn
+returnResWrd = returnFunction TknResWrd
+
+returnFunction :: (String -> Tkn) -> AlexInput -> Int -> Alex Tkn
+returnFunction f (_,_,_,s) i = return $ f (take i s)
+
+alexEOF :: Alex Tkn
+alexEOF = return $ TknEOF
+
+alexExec :: Alex Tkns
+alexExec = do
+   t <- alexMonadScan
+   case t of
+     TknEOF -> return $ [t]
+     _      -> do ts <- alexExec
+                  return (t:ts)
+}

@@ -1,2 +1,2 @@
 :set editor emacs
-:set -iusr/ -idist/build/autogen
+:set -iusr/ -idist/build/ewe/ewe-tmp/ -idist/build/autogen/ 
