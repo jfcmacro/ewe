@@ -27,6 +27,7 @@ tokens :-
        \#.*                         ;
        $eol                         { returnEOL }
        \:\=                         { returnAssgn }
+       \:                           { returnColon }
        [\*\+\-\/\%]                 { returnOper }
        \(                           { returnLPar}
        \)                           { returnRPar }
@@ -46,11 +47,10 @@ tokens :-
        "halt"                       { returnResWrd }
        "break"                      { returnResWrd }
        "equ"                        { returnResWrd }
---       \"($alpha $digit)*\"       { returnStr }
        \" [^\"]* \"                 { returnStr }
        (($nozerodigit $digit*)| 0)  { returnInt }
-       $alpha [$alpha $digit]*\:    { returnLabel }
-       $alpha [$alpha $digit]       { returnId }
+--       $alpha [$alpha $digit]*\:    { returnLabel }
+       $alpha [$alpha $digit]*       { returnId }
 
 {
 returnEOL :: AlexInput -> Int -> Alex Tkn
@@ -58,6 +58,9 @@ returnEOL = returnTkn $ TknEOL
 
 returnAssgn :: AlexInput -> Int -> Alex Tkn
 returnAssgn = returnTkn $ TknAssgn
+
+returnColon :: AlexInput -> Int -> Alex Tkn
+returnColon = returnTkn $ TknColon
 
 returnTkn :: Tkn -> AlexInput -> Int -> Alex Tkn
 returnTkn tkn _ _ = return $ tkn
@@ -89,8 +92,8 @@ returnStr = returnFunction (TknStr . read)
 returnInt :: AlexInput -> Int -> Alex Tkn
 returnInt = returnFunction (TknInt . read)
 
-returnLabel :: AlexInput -> Int -> Alex Tkn
-returnLabel = returnFunction TknLabel
+-- returnLabel :: AlexInput -> Int -> Alex Tkn
+-- returnLabel = returnFunction (TknLabel . init)
 
 returnId :: AlexInput -> Int -> Alex Tkn
 returnId = returnFunction TknId

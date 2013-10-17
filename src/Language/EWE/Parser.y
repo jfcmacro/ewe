@@ -15,9 +15,10 @@ import Language.EWE.AbsSyn
 
 %token int        { TknInt $$ }
        str        { TknStr $$ }  
-       label      { TknLabel $$ }
+--       label      { TknLabel $$ }
        id         { TknId $$ }
        ':='       { TknAssgn }
+       ':'        { TknColon }
        '('        { TknLPar  }
        ')'        { TknRPar  }
        '['        { TknLBrk  }
@@ -41,9 +42,8 @@ import Language.EWE.AbsSyn
        'readStr'  { TknResWrd "readStr" }
        'writeStr' { TknResWrd "writeStr" }
        'goto'     { TknResWrd "goto" }
-       if         { TknResWrd "if" }
+       'if'        { TknResWrd "if" }
        'then'     { TknResWrd "then" }
-       goto       { TknResWrd "goto" }
        'halt'     { TknResWrd "halt" }
        'break'    { TknResWrd "break" }
        'equ'      { TknResWrd "equ" }
@@ -54,7 +54,7 @@ EweProg : Executable Equates { Prg $1 $2 }
 Executable : LabelInstr              { [$1] }
            | LabelInstr Executable   { $1:$2 }
 
-LabelInstr : label LabelInstr        { addLabel $1 $2 }
+LabelInstr : id ':' LabelInstr        { addLabel $1 $3 }
            | Instr                   { Stmt [] $1 }
 
 Instr : MemRef ':=' int                           { IMMI $1 $3  }
@@ -73,10 +73,10 @@ Instr : MemRef ':=' int                           { IMMI $1 $3  }
       | 'writeInt' '(' MemRef ')'                 { IWI $3 }
       | 'readStr' '(' MemRef ',' MemRef ')'       { IRS $3 $5 }  
       | 'writeStr' '(' MemRef ')'                 { IWS $3 }
-      | goto int                                { IGI $2 }
-      | goto id                                 { IGS $2 }
-      | if MemRef Cond MemRef 'then' goto int { IFI $2 $3 $4 $7 }
-      | if MemRef Cond MemRef 'then' goto str { IFS $2 $3 $4 $7 }
+      | 'goto' int                                { IGI $2 }
+      | 'goto' id                                 { IGS $2 }
+      | 'if' MemRef Cond MemRef 'then' 'goto' int { IFI $2 $3 $4 $7 }
+      | 'if' MemRef Cond MemRef 'then' 'goto' id  { IFS $2 $3 $4 $7 }
       | 'halt'                                    { IH }
       | 'break'                                   { IB }
 

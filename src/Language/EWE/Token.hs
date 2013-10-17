@@ -4,9 +4,10 @@ type Tkns = [Tkn]
 
 data Tkn = TknInt   Int
          | TknStr   String
-         | TknLabel String
+--         | TknLabel String
          | TknId    String
          | TknAssgn
+         | TknColon
          | TknComma
          | TknLPar
          | TknRPar

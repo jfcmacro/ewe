@@ -1,15 +1,15 @@
-	zero:=0
-	one:=1
+	zero := 0
+	one := 1
 	littlea := 97
 	littlez := 122
-	diff:=32
+	diff := 32
 # s = input();
-	len:=100
+	len := 100
 	readStr(s, len)
 # i = 0;
-	i:=100
+	i := 100
 # while s[i] != 0 {
-loop:	tmp:=M[i+0]
+loop:	tmp := M[i+0]
 	if tmp = zero then goto end
 # if ('a' <= s[i] && s[i] <= 'z')
 	if littlea > tmp then goto skip
