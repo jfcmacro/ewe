@@ -4,7 +4,8 @@ module Language.EWE.Scanner(Alex(..),
                             alexMonadScan,
                             alexExec,
                             runAlex,
-                            alexGetInput
+                            alexGetInput,
+                            getPosn
                            ) where
 
 import Language.EWE.Token(Tkns,Tkn(..))
@@ -16,15 +17,15 @@ $alpha       = [a-zA-Z]
 $digit       = [0-9]
 $nozerodigit = [1-9]
 $graphic     = $printable
+$eol         = [\n]
 
 @string = \" (graphic # \")* \"
-@eol    = (\n|\r\n)
 
 tokens :-
 
        $white+                      ;
        \#.*                         ;
-       \n                           { returnEOL }
+       $eol                         { returnEOL }
        \:\=                         { returnAssgn }
        [\*\+\-\/\%]                 { returnOper }
        \(                           { returnLPar}
@@ -110,4 +111,9 @@ alexExec = do
      TknEOF -> return $ [t]
      _      -> do ts <- alexExec
                   return (t:ts)
+
+getPosn :: Alex (Int,Int)
+getPosn = do
+ (AlexPn _ l c,_,_,_) <- alexGetInput
+ return (l,c)
 }

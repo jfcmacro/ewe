@@ -23,7 +23,7 @@ data Options =  Options { optShowVersion :: Bool
 
 defaultOptions :: Options
 defaultOptions = Options { optShowVersion = False
-                         , optNoExec = False
+                         , optNoExec = True
                          , optScanOut  = False
                          , optParserOut = False
                          }

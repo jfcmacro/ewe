@@ -100,11 +100,6 @@ lexwrap cont = do
    t <- alexMonadScan
    cont t
 
-getPosn :: Alex (Int,Int)
-getPosn = do
- (AlexPn _ l c,_,_,_) <- alexGetInput
- return (l,c)
-
 addLabel :: String -> Stmt -> Stmt
 addLabel s (Stmt ss i) = Stmt (s:ss) i
 
