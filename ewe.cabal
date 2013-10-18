@@ -2,7 +2,7 @@
 -- see http://haskell.org/cabal/users-guide/
 
 name:                ewe
-version:             0.1.0.23
+version:             0.1.0.24
 synopsis:            An language to teach a programming
 description:         Another implemention of the EWE programming language originally created and developed by Kent D. Lee. EWE is an extension of the RAM programming language. RAM was created by Sethi.
 homepage:            http://github.com/jfcmacro/ewe
@@ -28,6 +28,7 @@ executable ewe
                        Language.EWE.Token,
                        Language.EWE.Scanner,
                        Language.EWE.Parser
+  x-agmodule:          file: "src/Language/EWE/AbsSyn.ag" options : data, catas, pretty, rename, haskellsyntax, module "Language.EWE.AbsSyn"
 
 source-repository head
   type:	    git
