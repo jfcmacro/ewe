@@ -1,17 +1,26 @@
-include "AbsSyn.ag"
-
-include
+imports
 {
 import qualified Data.Set as Set
+import Language.EWE.AbsSyn
+import Language.EWE.Utils
 }
 
+attr Prog
+   syn res      :: {Either String ()}
+
 attr Stmts
-   inh labelDefined :: {Set.Set String}
-   syn res       :: {Either String ()}
+   inh labelDef :: {Set.Set String}
+   syn res use {convert} {Right ()} :: {Either String ()}
 
 attr Stmt
    inh labelDef :: {Set.Set String}
-   syn res   :: {Either String ()}
+   syn res      :: {Either String ()}
+
+attr Labels 
+   syn copy     :: self
+
+sem Prog
+  | Prg stms.labelDef = { Set.empty }
 
 sem Stmt
   | Stmt lhs.res = {
@@ -20,8 +29,12 @@ sem Stmt
                               lbl ++ " is already defined\n" ++ er,
                               s)
                         else (e, er, Set.insert lbl s)
-       (e', errs', set') = foldl  (False,"",@lhs.labelDef) @labels
+       (e', errs', set') = foldl f (False,"",@lhs.labelDef) @labels.copy
    in if e'
       then Left errs'
       else Right ()
                    }
+
+include "AbsSyn.ag"
+
+

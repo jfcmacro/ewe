@@ -14,6 +14,7 @@ import Language.EWE.Scanner
 import Language.EWE.Parser
 import Language.EWE.AbsSyn
 import Language.EWE.VM(runVM,execVM)
+import Language.EWE.CheckGrammar
 
 data Options =  Options { optShowVersion :: Bool
                         , optNoExec      :: Bool
@@ -77,12 +78,25 @@ processFile opts fp = do
   s    <- hGetContents fh
   let  scanout = runAlex s alexExec
        pRes   = pEWE s
-       errorParser  = either (\_ -> True) (\_ -> False) pRes
-  when (optScanOut opts) (showScannerOutput scanout)
-  when (optParserOut opts) (showParserOutput pRes)
-  when (optNoExec opts) (execProg errorParser pRes)
+       errorParser           = either (\_ -> True)  (\_ -> False) pRes
+       (passGrammar,errGram) = either (\_ -> (False,[])) checkGrammar  pRes
+  when (optScanOut opts)               (showScannerOutput scanout)
+  when (optParserOut opts)             (showParserOutput pRes)
+  when (not passGrammar)               (showErrorGrammar errGram)
+  when (optNoExec opts && passGrammar) (execProg errorParser pRes)
   hClose fh
 
+showErrorGrammar :: String -> IO ()
+showErrorGrammar msg = do
+   hPutStrLn stderr $ show msg
+
+checkGrammar :: Prog -> (Bool,String)
+checkGrammar prog = let inh = Inh_Prog
+                        syn = wrap_Prog (sem_Prog prog) inh
+                    in case (res_Syn_Prog syn) of
+                         Left msg -> (False, msg)
+                         Right () -> (True, [])
+ 
 processStaticOptions :: Options -> IO ()
 processStaticOptions opts =
   if optShowVersion opts
