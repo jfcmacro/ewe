@@ -1,0 +1,27 @@
+include "AbsSyn.ag"
+
+include
+{
+import qualified Data.Set as Set
+}
+
+attr Stmts
+   inh labelDefined :: {Set.Set String}
+   syn res       :: {Either String ()}
+
+attr Stmt
+   inh labelDef :: {Set.Set String}
+   syn res   :: {Either String ()}
+
+sem Stmt
+  | Stmt lhs.res = {
+   let f (e,er,s) lbl = if Set.member lbl s
+                        then (True,
+                              lbl ++ " is already defined\n" ++ er,
+                              s)
+                        else (e, er, Set.insert lbl s)
+       (e', errs', set') = foldl  (False,"",@lhs.labelDef) @labels
+   in if e'
+      then Left errs'
+      else Right ()
+                   }

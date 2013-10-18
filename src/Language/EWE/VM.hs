@@ -2,6 +2,7 @@
 module Language.EWE.VM(runVM,execVM) where
 
 import Language.EWE.AbsSyn
+import Language.EWE.Utils(emptyProg, equates, stms)
 import qualified Data.List as L
 import qualified Data.Maybe as M
 import Control.Monad.Trans.State.Lazy
