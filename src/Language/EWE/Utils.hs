@@ -23,5 +23,5 @@ infixl 5 <-->
 _       <--> (Left s')  = Left s'
 _       <--> a          = a
 
-isMemRefId :: MemRef -> Bool
+isMemRefId :: MRef -> Bool
 isMemRefId (MRefId _) = True

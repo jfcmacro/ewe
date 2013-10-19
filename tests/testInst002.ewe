@@ -1,0 +1,4 @@
+# testInst002
+# Object: Probe how the <memref> := String works
+startTest: M[0]    := "Hello World"
+endTest:   halt

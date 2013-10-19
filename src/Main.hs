@@ -31,7 +31,7 @@ defaultOptions = Options { optShowVersion = False
 
 options :: [OptDescr (Options -> Options)]
 options =
-  [ Option ['V','?'] ["version"]
+  [ Option ['v','?'] ["version"]
     (NoArg (\opts -> opts { optShowVersion  = True }))
     "show version number"
   , Option ['n'] ["noexec"]

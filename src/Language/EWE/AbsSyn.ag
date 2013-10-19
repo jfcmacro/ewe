@@ -30,26 +30,26 @@ data Prog | Prg stms    :: Stmts
 
 deriving Prog : Eq, Show
 
-data Instr | IMMI  MRef Int                 -- Move Memory Int
-           | IMMS  MRef String              -- Move Memory String
-           | IMRPC MRef Int                 -- Move Memory Relative PC
-           | SPC   MRef                     -- Set PC
-           | IMMM  dest,left :: MRef        -- Move Memory to Memory
+data Instr | IMMI  dest :: MRef Int         -- Move a int into memory
+           | IMMS  dest :: MRef String      -- Move a string into memory
+           | IMRPC dest :: MRef Int         -- Move a relative PC into memory
+           | SPC   oper :: MRef             -- Set PC from memory
+           | IMMM  dest,oper :: MRef        -- Move Memory to Memory
            | IAdd  dest,left,right :: MRef  -- Add two Memory References
            | ISub  dest,left,right :: MRef  -- Sub two Memory References
            | IMul  dest,left,right :: MRef  -- Mul two Memory References
            | IDiv  dest,left,right :: MRef  -- Div two Memory References
            | IMod  dest,left,right ::  MRef -- Mod two Memory References
-           | IMRI  dest,left :: MRef Int    -- Move to Memory Ref
-           | IMMR  dest :: MRef Int right :: MRef -- Move to Memory Ref
-           | IRI   MRef                     -- Read an Int into a Mem Ref
-           | IWI   MRef                     -- Write an Int from a Mem Ref
+           | IMRI  dest,oper :: MRef Int    -- Move to Memory Ref
+           | IMMR  dest :: MRef Int oper :: MRef -- Move to Memory Ref
+           | IRI   oper :: MRef             -- Read an Int into a Mem Ref
+           | IWI   oper :: MRef             -- Write an Int from a Mem Ref
            | IRS   left, right :: MRef      -- Read a Str
-           | IWS  MRef                      -- Write a Str
+           | IWS   oper :: MRef             -- Write a Str
            | IGI  Int                       -- Goto to line
            | IGS  String                    -- Goto sym
-           | IFI  left :: MRef Cond right :: MRef Int        -- If Cond then Int
-           | IFS  left :: MRef Cond right :: MRef String     --
+           | IFI  bcond :: MRef Cond then :: MRef Int        -- If Cond then Int
+           | IFS  bcond :: MRef Cond then :: MRef String     --
            | IH                             -- Halt
            | IB                             -- Break
            | INI

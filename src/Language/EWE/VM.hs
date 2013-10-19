@@ -33,7 +33,7 @@ emptyStateVM = StVM { mem = emptyMemory
 
 type StateVMM = StateT StateVM IO
 
-runVM :: Prog -> IO () 
+runVM :: Prog -> IO ()
 runVM prg = evalStateT evalVM (initVM prg)
 
 execVM :: Prog -> IO StateVM
@@ -43,13 +43,13 @@ evalVM :: StateVMM ()
 evalVM = do
   lift $ hPutStrLn stdout "Iniciando maquina"
   evalInstr
-  
+
 initVM :: Prog -> StateVM
 initVM p = emptyStateVM { prg = p }
 
 mRef :: MRef -> Equates -> Int
 mRef (MRefI i) _  = i
-mRef (MRefId s) m = M.fromMaybe (error "No found") $ L.lookup s m
+mRef (MRefId s) m = M.fromMaybe (error $ "Internal error: memory reference " ++ s ++ " not found ") $ L.lookup s m
 
 outMem :: Int -> Memory -> (Memory,Int)
 outMem r m = M.maybe ((r,0):m, 0) (\i -> (m,i)) (L.lookup r m)
@@ -108,9 +108,12 @@ execInstr (IMMI mr i) state =
   state { mem = inMem (mRef mr (ge state)) i (mem state)
         , pc  = incrPC state
         }
-execInstr (IMMS mr s) state =
-  state { mem = inMem (mRef mr (ge state)) (mRef (MRefId s) (ge state)) (mem state)
-        , pc = incrPC state
+execInstr (IMMS mr s) st = 
+  let base  = mRef mr (ge st)
+      total = base + length s
+      st'   = moveStrInMem s base total st
+  in st { mem = mem st'
+        , pc = incrPC st
         }
 execInstr (IMRPC mr i) state =
   state { mem = inMem (mRef mr (ge state)) ((pc state) + i) (mem state)

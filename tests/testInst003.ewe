@@ -1,0 +1,4 @@
+# testInst003
+# Object: Probe how the <memref> := PC + Integer works
+startTest: M[0]    := PC + 10
+endTest:   halt

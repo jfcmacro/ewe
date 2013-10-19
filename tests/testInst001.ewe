@@ -1,4 +1,4 @@
-# testInst01 
+# testInst001
 # Object: Probe how the <memref> := Integer works
 startTest: M[0]    := 10
            M[10]   := 100
