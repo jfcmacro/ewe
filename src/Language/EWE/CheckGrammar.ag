@@ -1,6 +1,7 @@
 imports
 {
 import qualified Data.Set as Set
+import qualified Data.Map as Map
 import Language.EWE.AbsSyn
 import Language.EWE.Utils
 }
@@ -12,33 +13,37 @@ attr Equates
    chn idRefMem :: {Set.Set String}
 
 attr Equ
-   chn idRefMem :: {Set.Set String}
+   chn idRefMem :: {Map.Map String Int}
 
 attr Stmts
    chn labelDef                     :: {Set.Set String}
    inh labelFound                   :: {Set.Set String}
-   inh idMemRefDef                  :: {Set.Set String}
-   syn res use {convert} {Right ()} :: {Either String ()}
+   inh idMemRefDef                  :: {Map.Map String Int}
+   syn res use {(<-->)} {Right ()} :: {Either String ()}
 
 attr Stmt
    chn labelDef    :: {Set.Set String}
    inh labelFound  :: {Set.Set String}
-   inh idMemRefDef :: {Set.Set String}
+   inh idMemRefDef :: {Map.Map String Int}
    syn res         :: {Either String ()}
 
 attr Instr
    inh labelFound  :: {Set.Set String}
-   inh idMemRefDef :: {Set.Set String}
+   inh idMemRefDef :: {Map.Map String Int}
    syn res         :: {Either String ()}
 
 attr Labels
    syn copy     :: self
 
+attr MRef
+   inh idMemRefDef :: { Map.Map String Int }
+   syn res         :: { Either String ()}
+
 sem Prog
   | Prg stms.labelDef    = { Set.empty }
             .labelFound  = { @stms.labelDef }
-            .idMemRefDef = { @equates.idMemRef }
-        equates.idMemRef = { Set.empty }
+            .idMemRefDef = { @equates.idRefMem }
+        equates.idRefMem = { Map.empty }
 
 sem Stmt
   | Stmt loc.res1 = {
@@ -52,31 +57,33 @@ sem Stmt
       then Left errs'
       else Right ()
                    }
-          lhs.res = { convert @res1 @instr.res }
+          lhs.res = { @res1 <--> @instr.res }
 
-
+sem MRef
+  | MRefI  lhs.res = Right ()
+  | MRefId lhs.res = testIdMR @string @lhs.idMemRefDef
 
 sem Instr
-  | IMMI  lhs.res = { Right () }
-  | IMMS  lhs.res = { Right () }
-  | IMRPC lhs.res = { Right () }
-  | SPC   lhs.res = { Right () }
-  | IMMM  lhs.res = { Right () }
-  | IAdd  lhs.res = { Right () }
-  | ISub  lhs.res = { Right () }
-  | IMul  lhs.res = { Right () }
-  | IDiv  lhs.res = { Right () }
-  | IMod  lhs.res = { Right () }
-  | IMRI  lhs.res = { Right () }
-  | IMMR  lhs.res = { Right () }
-  | IRI   lhs.res = { Right () }
-  | IWI   lhs.res = { Right () }
-  | IRS   lhs.res = { Right () }
-  | IWS   lhs.res = { Right () }
+  | IMMI  lhs.res = { @mref.res }
+  | IMMS  lhs.res = { @mref.res }
+  | IMRPC lhs.res = { @mref.res }
+  | SPC   lhs.res = { @mref.res }
+  | IMMM  lhs.res = { @dest.res <--> @left.res }
+  | IAdd  lhs.res = { @dest.res <--> @left.res <--> @right.res }
+  | ISub  lhs.res = { @dest.res <--> @left.res <--> @right.res }
+  | IMul  lhs.res = { @dest.res <--> @left.res <--> @right.res }
+  | IDiv  lhs.res = { @dest.res <--> @left.res <--> @right.res }
+  | IMod  lhs.res = { @dest.res <--> @left.res <--> @right.res }
+  | IMRI  lhs.res = { @dest.res <--> @left.res }
+  | IMMR  lhs.res = { @dest.res <--> @left.res }
+  | IRI   lhs.res = { @mref.res }
+  | IWI   lhs.res = { @mref.res }
+  | IRS   lhs.res = { @dest.res <--> @left.res }
+  | IWS   lhs.res = { @mref.res }
   | IGI   lhs.res = { Right () }
   | IGS   lhs.res = { testLabelDef @string @lhs.labelFound }
-  | IFI   lhs.res = { Right () }
-  | IFS   lhs.res = { testLabelDef @string @lhs.labelFound }
+  | IFI   lhs.res = { @dest.res <--> @left.res }
+  | IFS   lhs.res = { testLabelDef @string @lhs.labelFound <--> @dest.res <--> @left.res}
   | IH    lhs.res = { Right () }
   | IB    lhs.res = { Right () }
   | INI   lhs.res = { Right () }
@@ -88,4 +95,9 @@ testLabelDef :: String -> Set.Set String ->  Either String ()
 testLabelDef str sets
     | str `Set.member` sets = Right ()
     | otherwise             = Left $ "Label: " ++ str ++ " is not defined "
+
+testIdMR :: String -> Map.Map String -> Either String ()
+testIdMr str map
+    | str `Map.member` map = Right ()
+    | otherwise            = Left $ "Mem Ref: " ++ str ++ " is not defined"
 }
