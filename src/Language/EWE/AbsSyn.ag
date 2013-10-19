@@ -45,7 +45,6 @@ data Instr | IMMI  MRef Int                 -- Move Memory Int
            | IRI   MRef                     -- Read an Int into a Mem Ref
            | IWI   MRef                     -- Write an Int from a Mem Ref
            | IRS   left, right :: MRef      -- Read a Str
-
            | IWS  MRef                      -- Write a Str
            | IGI  Int                       -- Goto to line
            | IGS  String                    -- Goto sym

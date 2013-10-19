@@ -8,22 +8,40 @@ import Language.EWE.Utils
 attr Prog
    syn res      :: {Either String ()}
 
+attr Equates
+   chn idRefMem :: {Set.Set String}
+
+attr Equ
+   chn idRefMem :: {Set.Set String}
+
 attr Stmts
-   inh labelDef :: {Set.Set String}
+   chn labelDef                     :: {Set.Set String}
+   inh labelFound                   :: {Set.Set String}
+   inh idMemRefDef                  :: {Set.Set String}
    syn res use {convert} {Right ()} :: {Either String ()}
 
 attr Stmt
-   inh labelDef :: {Set.Set String}
-   syn res      :: {Either String ()}
+   chn labelDef    :: {Set.Set String}
+   inh labelFound  :: {Set.Set String}
+   inh idMemRefDef :: {Set.Set String}
+   syn res         :: {Either String ()}
 
-attr Labels 
+attr Instr
+   inh labelFound  :: {Set.Set String}
+   inh idMemRefDef :: {Set.Set String}
+   syn res         :: {Either String ()}
+
+attr Labels
    syn copy     :: self
 
 sem Prog
-  | Prg stms.labelDef = { Set.empty }
+  | Prg stms.labelDef    = { Set.empty }
+            .labelFound  = { @stms.labelDef }
+            .idMemRefDef = { @equates.idMemRef }
+        equates.idMemRef = { Set.empty }
 
 sem Stmt
-  | Stmt lhs.res = {
+  | Stmt loc.res1 = {
    let f (e,er,s) lbl = if Set.member lbl s
                         then (True,
                               lbl ++ " is already defined\n" ++ er,
@@ -34,7 +52,40 @@ sem Stmt
       then Left errs'
       else Right ()
                    }
+          lhs.res = { convert @res1 @instr.res }
+
+
+
+sem Instr
+  | IMMI  lhs.res = { Right () }
+  | IMMS  lhs.res = { Right () }
+  | IMRPC lhs.res = { Right () }
+  | SPC   lhs.res = { Right () }
+  | IMMM  lhs.res = { Right () }
+  | IAdd  lhs.res = { Right () }
+  | ISub  lhs.res = { Right () }
+  | IMul  lhs.res = { Right () }
+  | IDiv  lhs.res = { Right () }
+  | IMod  lhs.res = { Right () }
+  | IMRI  lhs.res = { Right () }
+  | IMMR  lhs.res = { Right () }
+  | IRI   lhs.res = { Right () }
+  | IWI   lhs.res = { Right () }
+  | IRS   lhs.res = { Right () }
+  | IWS   lhs.res = { Right () }
+  | IGI   lhs.res = { Right () }
+  | IGS   lhs.res = { testLabelDef @string @lhs.labelFound }
+  | IFI   lhs.res = { Right () }
+  | IFS   lhs.res = { testLabelDef @string @lhs.labelFound }
+  | IH    lhs.res = { Right () }
+  | IB    lhs.res = { Right () }
+  | INI   lhs.res = { Right () }
 
 include "AbsSyn.ag"
 
-
+{
+testLabelDef :: String -> Set.Set String ->  Either String ()
+testLabelDef str sets
+    | str `Set.member` sets = Right ()
+    | otherwise             = Left $ "Label: " ++ str ++ " is not defined "
+}
