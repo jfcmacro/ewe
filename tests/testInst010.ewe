@@ -1,6 +1,5 @@
 # testInst010
 # Object: Probe how the readStr and writeStr
-# M[<memref> + Integer]
 startTest: readStr(a,b)
            writeStr(a)
 endTest:   halt
