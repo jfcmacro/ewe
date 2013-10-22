@@ -18,7 +18,7 @@ stms (Prg s _) = s
 infixl 5 <-->
 
 (<-->) :: Either String () -> Either String () -> Either String ()
-(Left s) <--> (Left s') = Left (s ++ s')
+(Left s) <--> (Left s') = Left (s ++ "\n" ++ s')
 (Left s) <--> _         = Left s
 _       <--> (Left s')  = Left s'
 _       <--> a          = a

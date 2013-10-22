@@ -1,0 +1,15 @@
+# testInst020.ewe
+# Object: Probe how if then goto int instr
+startTest: uno    := 1
+           zero   := 0
+           nocaso := zero - uno
+           readInt(a)
+           readInt(b)
+           if a < b then goto 8
+           writeInt(nocaso)
+           goto 10
+           writeInt(uno)
+           goto 10
+           halt
+equ a M[0] equ b M[1] equ uno M[2]
+equ nocaso M[3] equ zero M[4]

@@ -1,0 +1,14 @@
+# testInst006
+# Object: Probe how the <memref> := M[<memref> + Integer] and instructions
+# M[<memref> + Integer]
+startTest: sp := 2
+           tmp := 0
+           M[sp+0] := tmp
+           tmp := 1
+           M[sp+1] := tmp
+           tmp := M[sp+0]
+           writeInt(tmp)
+           tmp := M[sp+1]
+           writeInt(tmp)
+endTest:   halt
+equ tmp M[0] equ sp M[1] equ stack M[2]

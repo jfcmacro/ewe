@@ -1,2 +1,5 @@
 *~
 dist/
+*.hi
+*.o
+Setup

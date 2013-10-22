@@ -1,0 +1,18 @@
+# testInst006
+# Object: Probe how the <memref> := <memref> <op> <memref> works
+startTest: a:=2
+           b:=3
+	   writeInt(a)
+           writeInt(b)
+           res := a + b
+           writeInt(res)
+           res := a - b
+           writeInt(res)
+           res := a * b
+           writeInt(res)
+           res := a / b
+           writeInt(res)
+           res := a % b
+           writeInt(res)
+endTest:   halt
+equ a M[0] equ b M[1] equ res M[2]

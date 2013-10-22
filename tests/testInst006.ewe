@@ -1,0 +1,9 @@
+# testInst006
+# Object: Probe how the <memref> := <memref> works
+startTest: a:=2
+           b:=3
+           tmp:=a
+           a:=b
+           b:=tmp
+endTest:   halt
+equ a M[0] equ b M[1] equ tmp M[2]

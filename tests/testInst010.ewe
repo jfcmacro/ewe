@@ -1,0 +1,7 @@
+# testInst010
+# Object: Probe how the readStr and writeStr
+# M[<memref> + Integer]
+startTest: readStr(a,b)
+           writeStr(a)
+endTest:   halt
+equ a M[0] equ b M[20]

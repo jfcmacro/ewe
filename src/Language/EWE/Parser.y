@@ -86,10 +86,10 @@ Equates :                                         { [] }
 MemRef : 'M' '[' int ']'                          { MRefI $3 }
        | id                                       { MRefId $1 }
 
-Cond : '>='                                       { CLET }
-     | '>'                                        { CLT }
-     | '<='                                       { CGET }
-     | '<'                                        { CGT }
+Cond : '<='                                       { CLET }
+     | '<'                                        { CLT }
+     | '>='                                       { CGET }
+     | '>'                                        { CGT }
      | '='                                        { CE }
      | '<>'                                       { CNE }
 

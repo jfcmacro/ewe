@@ -1,0 +1,15 @@
+# testInst017
+# Object: Probe how if then goto str instr
+startTest: uno    := 1
+           zero   := 0
+           nocaso := zero - uno
+           readInt(a)
+           readInt(b)
+           if a = b then goto igual
+           writeInt(nocaso)
+           goto final
+igual:     writeInt(uno)
+           goto final
+final:     halt
+equ a M[0] equ b M[1] equ uno M[2]
+equ nocaso M[3] equ zero M[4]

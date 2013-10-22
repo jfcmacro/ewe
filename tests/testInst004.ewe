@@ -2,5 +2,4 @@
 # Object: Probe how the PC := <memref> works
 startTest: M[0]    := 2 # Address of endTest
            PC      := M[0]
-           M[0]    := M[0] + M[0]
 endTest:   halt

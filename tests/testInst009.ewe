@@ -1,0 +1,13 @@
+# testInst009
+# Object: Probe how the readInt and writeInt
+# M[<memref> + Integer]
+startTest: readInt(a)
+           readInt(b)
+           result:=a+b
+           writeInt(result)
+           readInt(M[0])
+           readInt(M[1])
+           M[2]:=a-b
+           writeInt(M[2])
+endTest:   halt
+equ a M[0] equ b M[1] equ result M[2]

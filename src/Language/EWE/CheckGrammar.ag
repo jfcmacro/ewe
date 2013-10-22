@@ -10,10 +10,10 @@ attr Prog
    syn res      :: {Either String ()}
 
 attr Equates
-   chn idRefMem :: {Map.Map String Int}
+   chn idMemRef :: {Map.Map String Int}
 
 attr Equ
-   chn idRefMem :: {Map.Map String Int}
+   chn idMemRef :: {Map.Map String Int}
    syn res      :: {Either String ()}
 
 attr Stmts
@@ -34,24 +34,32 @@ attr Instr
    syn res         :: {Either String ()}
 
 attr Labels
+   syn res      :: { Either String () }
+   chn labelDef :: { Set.Set String }
    syn copy     :: self
 
 attr MRef
    inh idMemRefDef :: { Map.Map String Int }
-   syn res         :: { Either String ()}
+   syn res         :: { Either String () }
 
 sem Equ
-  | Tuple lhs.res      = { if @x1 `Map.member` @lhs.idRefMem
+  | Tuple lhs.res      = { if @x1 `Map.member` @lhs.idMemRef
                            then Left $ @x1 ++ " was already defined "
                            else Right ()
                          }
-             .idRefMem = { Map.insert @x1 @x2 @lhs.idRefMem }
+             .idMemRef = { Map.insert @x1 @x2 @lhs.idMemRef }
+
+sem Labels
+  | Cons  lhs.res      = { isLabelNotDef @hd @tl.labelDef }
+             .labelDef = { Set.insert @hd @tl.labelDef }
+  | Nil   lhs.res      = { Right ()  }
+             .labelDef = { @lhs.labelDef }
 
 sem Prog
   | Prg stms.labelDef    = { Set.empty }
             .labelFound  = { @stms.labelDef }
-            .idMemRefDef = { @equates.idRefMem }
-        equates.idRefMem = { Map.empty }
+            .idMemRefDef = { @equates.idMemRef }
+        equates.idMemRef = { Map.empty }
 
 sem Stmt
   | Stmt loc.res1 = {
@@ -69,7 +77,7 @@ sem Stmt
 
 sem MRef
   | MRefI  lhs.res = Right ()
-  | MRefId lhs.res = testIdMR @string @lhs.idMemRefDef
+  | MRefId lhs.res = isMemRefDef @string @lhs.idMemRefDef
 
 sem Instr
   | IMMI  lhs.res = { @dest.res }
@@ -89,9 +97,9 @@ sem Instr
   | IRS   lhs.res = { @left.res <--> @right.res }
   | IWS   lhs.res = { @oper.res }
   | IGI   lhs.res = { Right () }
-  | IGS   lhs.res = { testLabelDef @string @lhs.labelFound }
+  | IGS   lhs.res = { isLabelDef @string @lhs.labelFound }
   | IFI   lhs.res = { @bcond.res <--> @then.res }
-  | IFS   lhs.res = { testLabelDef @string @lhs.labelFound <--> @bcond.res <--> @then.res}
+  | IFS   lhs.res = { isLabelDef @string @lhs.labelFound <--> @bcond.res <--> @then.res}
   | IH    lhs.res = { Right () }
   | IB    lhs.res = { Right () }
   | INI   lhs.res = { Right () }
@@ -99,13 +107,18 @@ sem Instr
 include "AbsSyn.ag"
 
 {
-testLabelDef :: String -> Set.Set String ->  Either String ()
-testLabelDef str sets
+isLabelDef :: String -> Set.Set String ->  Either String ()
+isLabelDef str sets
     | str `Set.member` sets = Right ()
     | otherwise             = Left $ "Label: " ++ str ++ " is not defined "
 
-testIdMR :: String -> Map.Map String Int -> Either String ()
-testIdMR str map
+isLabelNotDef :: String -> Set.Set String ->  Either String ()
+isLabelNotDef str sets
+    | str `Set.member` sets =  Left $ "Label: " ++ str ++ " is already defined "
+    | otherwise             = Right ()
+
+isMemRefDef :: String -> Map.Map String Int -> Either String ()
+isMemRefDef str map
     | str `Map.member` map = Right ()
     | otherwise            = Left $ "Mem Ref: " ++ str ++ " is not defined"
 }

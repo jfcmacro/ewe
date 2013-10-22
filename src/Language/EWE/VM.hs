@@ -129,9 +129,9 @@ execInstr (IMMM mr1 mr2) state =
   in state { mem = inMem (mRef mr1 ge') v m'
            , pc  = incrPC state
            }
-execInstr (IAdd mrr mra mrb) state = comp (+) mrr mra mrb state
-execInstr (ISub mrr mra mrb) state = comp (-) mrr mra mrb state
-execInstr (IMul mrr mra mrb) state = comp (*) mrr mra mrb state
+execInstr (IAdd mrr mra mrb) state = comp (+)   mrr mra mrb state
+execInstr (ISub mrr mra mrb) state = comp (-)   mrr mra mrb state
+execInstr (IMul mrr mra mrb) state = comp (*)   mrr mra mrb state
 execInstr (IDiv mrr mra mrb) state = comp (div) mrr mra mrb state
 execInstr (IMod mrr mra mrb) state = comp (mod) mrr mra mrb state
 execInstr (IMRI mrr mr  i) state =
@@ -170,7 +170,7 @@ execInstr (IFI mra cond mrb i) state =
       stms'   = stms prg'
       l'      = length stms'
       (m',a)  = outMem (mRef mra ge') m
-      (m'',b) = outMem (mRef mra ge') m'
+      (m'',b) = outMem (mRef mrb ge') m'
       op      = fun cond
       i'      = if (i >= 0 && i < l')
                 then i else error "Inst Pos not valid in condition"
@@ -186,7 +186,7 @@ execInstr (IFS mra cond mrb s) state =
       stms'   = stms prg'
       l'      = length stms'
       (m',a)  = outMem (mRef mra ge') m
-      (m'',b) = outMem (mRef mra ge') m'
+      (m'',b) = outMem (mRef mrb ge') m'
       op      = fun cond
       i       = lookupLabel s stms'
       npc     = if a `op` b then i else pc' + 1
@@ -248,8 +248,8 @@ lookupLabel' :: Int -> String -> Stmts -> Int
 lookupLabel' n s [] = error "Label not found"
 lookupLabel' n s ((Stmt []  _):stms) = lookupLabel' (n+1) s stms
 lookupLabel' n s ((Stmt lbls _):stms)
-  | s `elem` lbls          = n
-  | otherwise            = lookupLabel' (n+1) s stms
+    | s `elem` lbls = n
+    | otherwise     = lookupLabel' (n+1) s stms
 
 fun :: Cond -> (Int -> Int -> Bool)
 fun CLET = (<=)

@@ -1,0 +1,10 @@
+# testInst014
+# Object: Probe how goto Int
+startTest: goto 3
+           writeInt(a)
+           halt
+           readInt(a)
+           a:=a+a
+           goto 1
+endTest:   halt
+equ a M[0]
