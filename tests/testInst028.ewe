@@ -1,0 +1,42 @@
+# Inicia el programa
+main: sp := 5
+      uno := 1
+      tres := 3
+      sp := sp + uno
+# Invocar al arbol
+# Inicia Add Node
+      sp := sp + tres
+# Invocar hijo izquierdo
+# Inicia NumNode
+      tmp := 3
+      M[sp + 0] := tmp
+# Termina Num ode
+# Termina hijo izquierdo
+      sp := sp - tres
+      tmp := M[sp + 3]
+      M[sp + 1] := tmp
+      sp := sp + tres
+# Invocar hijo derecho
+# Inicia NumNode
+      tmp := 4
+      M[sp+0] := tmp
+# Termina NumNode
+# Termina hijo derecho
+      sp := sp - tres
+      tmp := M[sp+3]
+      M[sp+2] := tmp
+      tmp := M[sp+1]
+      tmp2:= M[sp+2]
+      tmp := tmp + tmp2
+      M[sp+0] := tmp
+# Fin Add Node
+      sp := sp - uno
+      tmp := M[sp + 1]
+      writeInt(tmp)
+      halt
+equ tmp   M[0]
+equ tmp2  M[1]
+equ uno   M[2]
+equ tres  M[3]
+equ sp    M[4]
+equ stack M[5]

@@ -1,0 +1,96 @@
+# Inicio de la raiz
+main:  sp   := 6
+       uno  := 1
+       tres := 3
+       sp := sp + uno
+# Invocar hijo de la raiz
+# Inicia MulNod
+       sp := sp + tres
+# Invocar hijo izquierdo
+# Iniciar AddNode
+       sp := sp + tres
+# Invocar hijo izquierdo AddNode
+# Inicio StoreNode
+       sp := sp + uno
+# Invocar hijo StoreNode
+# Inicio NumNode
+       tmp := 3
+       M[sp+0] := tmp
+# Fin NumNode
+# Fin hijo de StoreNode
+      sp := sp - uno
+      tmp := M[sp+1]
+      M[sp+0] := tmp
+      mem := tmp
+# Fin StoreNode
+# Fin Invocar hijo izquierdo AddNode
+      sp := sp - tres
+      tmp := M[sp+3]
+      M[sp+1] := tmp
+      sp := sp + tres
+# Invocar hijo derecho AddNode
+# Inicio NumNode
+      tmp := 4
+      M[sp+0] := tmp
+# Fin NumNode
+# Fin hijo derecho AddNode
+      sp := sp - tres
+      tmp := M[sp+3]
+      M[sp+2] := tmp
+      tmp := M[sp+1]
+      tmp2 := M[sp+2]
+      tmp := tmp + tmp2
+      M[sp+0] := tmp
+# Fin AddNode
+# Fin invocar hijo izquierdo
+      sp := sp - tres
+      tmp := M[sp+3]
+      M[sp+1] := tmp
+      sp := sp + tres
+# Invocar hijo derecho
+# Inicio SubNode
+      sp := sp + tres
+# Invocar hijo izquierdo de SubNode
+# Inicio de NumNode
+      tmp := 7
+      M[sp+0] := tmp
+# Fin de NumNode
+# Fin Invocar hijo izquierdo de SubNode
+      sp := sp - tres
+      tmp := M[sp+3]
+      M[sp+1] := tmp
+      sp := sp + tres
+# Invocar hijo derecho de SubNode
+# Inicio RecallNode
+      M[sp+0]:= mem
+# Fin RecallNode
+# Fin Invocar hijo derecho de SubNode
+      sp := sp - tres
+      tmp := M[sp+3]
+      M[sp+2] := tmp
+      tmp := M[sp+1]
+      tmp2 := M[sp+2]
+      tmp := tmp - tmp2
+      M[sp+0] := tmp
+# Fin SubNode
+# Fin invocar hijo derecho
+      sp := sp - tres
+      tmp := M[sp+3]
+      M[sp+2] := tmp
+      tmp := M[sp+1]
+      tmp2 := M[sp+2]
+      tmp := tmp * tmp2
+      M[sp+0] := tmp
+# Fin MulNode  
+# Fin Invocar hijo de la raiz
+       sp := sp - uno
+       tmp := M[sp+1]
+       writeInt(tmp)
+       halt
+equ tmp   M[0]
+equ tmp2  M[1]
+equ uno   M[2]
+equ tres  M[3]
+equ mem   M[4]
+equ sp    M[5]
+equ stack M[6]

@@ -1,0 +1,18 @@
+# Inicia el programa
+# Esta es la raiz de mi programa
+# Inicio del codigo generado por raiz
+main:	 sp := 3
+	 uno := 1
+	sp := sp + uno
+# Invocar a NumNode
+# Codigo generado por NumNode
+  	 tmp := 3
+	 M[sp+0] := tmp
+# Fin del codigo generado por NumNode
+# Termino de invocar a NumNode
+  	 sp := sp - uno
+	 tmp := M[sp + 1]
+	 writeInt(tmp)
+	 halt
+equ tmp M[0] equ uno M[1] equ sp  M[2] equ stack M[3]
+# Fin del codigo generado por Raiz

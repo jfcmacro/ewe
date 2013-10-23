@@ -55,11 +55,7 @@ outMem :: Int -> Memory -> (Memory,Int)
 outMem r m = M.maybe ((r,0):m, 0) (\i -> (m,i)) (L.lookup r m)
 
 inMem :: Int -> Int -> Memory -> Memory
-inMem = updateM emptyMemory
-
-updateM :: Memory -> Int -> Int -> Memory -> Memory
-updateM m r v []            = (r,v):m
-updateM m r v (d@(r',_):m') = updateM (d:m) r v m'
+inMem i v m = (i,v):m
 
 incrPC :: StateVM -> Int
 incrPC state = (pc state) + 1
@@ -135,20 +131,20 @@ execInstr (IMul mrr mra mrb) state = comp (*)   mrr mra mrb state
 execInstr (IDiv mrr mra mrb) state = comp (div) mrr mra mrb state
 execInstr (IMod mrr mra mrb) state = comp (mod) mrr mra mrb state
 execInstr (IMRI mrr mr  i) state =
-  let m        = mem state
-      ge'      = ge state
-      (m',v)   = outMem (mRef mr ge') m
-      (m'', v')= outMem (v + i) m'
+  let m          = mem state
+      ge'        = ge state
+      (m',v)     = outMem (mRef mr ge') m
+      (m'', v')  = outMem (v + i) m'
   in state { mem = inMem (mRef mrr ge') v' m''
            , pc  = incrPC state
            }
 execInstr (IMMR mri i mr) state =
-  let m         = mem state
-      ge'       = ge state
-      (m', v)   = outMem (mRef mr ge') m
-      (m'', v') = outMem (mRef mri ge') m'
+  let m          = mem state
+      ge'        = ge state
+      (m', v)    = outMem (mRef mr ge') m
+      (m'', v')  = outMem (mRef mri ge') m'
   in state { mem = inMem (v' + i) v m''
-           , pc = incrPC state
+           , pc  = incrPC state
            }
 execInstr (IGI i) state =
   let prg'  = prg state
