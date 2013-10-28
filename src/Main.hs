@@ -68,12 +68,13 @@ execProg :: Bool -> Either String Prog -> IO ()
 execProg True _ = return ()
 execProg False (Right prog) = do
    r <- execVM prog
-   hPutStrLn stdout $ show r
+   return ()
+   -- hPutStrLn stdout $ show r
 execProg False _ = return ()
 
 processFile :: Options -> FilePath -> IO ()
 processFile opts fp = do
-  hPutStrLn stdout $ "Processing file: " ++ fp
+  -- hPutStrLn stdout $ "Processing file: " ++ fp
   fh   <- openFile fp ReadMode
   s    <- hGetContents fh
   let  scanout = runAlex s alexExec

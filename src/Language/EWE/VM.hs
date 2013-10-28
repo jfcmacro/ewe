@@ -41,7 +41,7 @@ execVM prg = execStateT evalVM (initVM prg)
 
 evalVM :: StateVMM ()
 evalVM = do
-  lift $ hPutStrLn stdout "Iniciando maquina"
+  -- lift $ hPutStrLn stdout "Iniciando maquina"
   evalInstr
 
 initVM :: Prog -> StateVM
