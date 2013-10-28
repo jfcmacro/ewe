@@ -96,7 +96,7 @@ checkGrammar prog = let inh = Inh_Prog
                     in case (res_Syn_Prog syn) of
                          Left msg -> (False, msg)
                          Right () -> (True, [])
- 
+
 processStaticOptions :: Options -> IO ()
 processStaticOptions opts =
   if optShowVersion opts

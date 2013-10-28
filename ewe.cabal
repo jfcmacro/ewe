@@ -2,7 +2,7 @@
 -- see http://haskell.org/cabal/users-guide/
 
 name:                ewe
-version:             0.1.0.32
+version:             0.1.0.34
 synopsis:            An language using in Programming Languages teaching
 description:         Another implemention of the EWE programming language originally created and developed by Kent D. Lee. EWE is an extension of the RAM programming language. RAM was created by Sethi.
 homepage:            http://github.com/jfcmacro/ewe
@@ -14,6 +14,7 @@ maintainer:          fcardona@eafit.edu.co
 category:            Language
 build-type:          Simple
 cabal-version:       >=1.8
+extra-source-files: src-ag/Language/EWE/CheckGrammar.ag src-ag/Language/EWE/AbsSyn.ag
 
 executable ewe
   main-is:          Main.hs
@@ -31,7 +32,7 @@ executable ewe
                     Language.EWE.Scanner,
                     Language.EWE.CheckGrammar,
                     Language.EWE.Parser
-  x-agmodule:        file: "src-ag/Language/EWE/AbsSyn.ag" options : data, pretty, haskellsyntax, module "Language.EWE.AbsSyn", output "src/Language/EWE/AbsSyn.hs"
+  x-agmodule:       file: "src-ag/Language/EWE/AbsSyn.ag" options : data, pretty, haskellsyntax, module "Language.EWE.AbsSyn", output "src/Language/EWE/AbsSyn.hs"
   x-agmodule:       file: "src-ag/Language/EWE/CheckGrammar.ag" options : semfuns, pretty, haskellsyntax, catas, wrappers, signatures, module "Language.EWE.CheckGrammar", output "src/Language/EWE/CheckGrammar.hs"
 
 source-repository head
