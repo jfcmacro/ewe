@@ -207,11 +207,11 @@ execIRS :: String -> Instr -> StateVM -> StateVM
 execIRS s (IRS mr1 mr2) state =
   let ge'     = ge state
       startP  = mRef mr1 ge'
-      endP    = mRef mr1 ge'
-      state'  = moveStrInMem s startP endP state
-  in if (startP <= endP)
+      lenStr  = mRef mr2 ge'
+      state'  = moveStrInMem s startP (startP + lenStr) state
+  in if lenStr < 0
      then state' { pc = incrPC state }
-     else error "IRS start > end"
+     else error "IRS len is negative"
 
 moveStrInMem :: String -> Int -> Int -> StateVM -> StateVM
 moveStrInMem [] st en state
