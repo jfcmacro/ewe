@@ -83,13 +83,13 @@ evalInstr = do
              put st''
              evalInstr
          (IRS _ _) -> do
-           s <- lift $ getLine
+           s <- lift $ readStr "Enter an string:"
            let st'' = execIRS s ci st
            put st''
            evalInstr
          (IWS _) -> do
              let (st'',s) = execIWS ci st
-             lift $ putStrLn s
+             lift $ putStrLn (show s)
              put st''
              evalInstr
          (IH)      -> return ()
@@ -280,3 +280,11 @@ readInt msg = do
   putStr (msg ++ "> ")
   hFlush stdout
   readLn
+
+readStr :: String -> IO String
+readStr msg = do
+  putStr (msg ++ "> ")
+  hFlush stdout
+  s <- getLine
+  -- putStrLn s
+  return $ s

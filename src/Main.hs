@@ -6,6 +6,7 @@ import System.IO(openFile, hClose, IOMode(..), hGetContents, stdin, stdout
                 ,stderr, hPutStr, hPutStrLn)
 import System.Exit(ExitCode(..),exitSuccess)
 import Data.Version(Version(..), showVersion)
+import System.Exit(exitSuccess)
 import System.Console.GetOpt
 import Data.Maybe(fromMaybe)
 import Control.Monad(when)
@@ -21,14 +22,16 @@ data Options =  Options { optShowVersion :: Bool
                         , optNoExec      :: Bool
                         , optScanOut     :: Bool
                         , optParserOut   :: Bool
+                        , optDebug       :: Bool
                         } deriving Show
 
 defaultOptions :: Options
 defaultOptions = Options { optShowVersion = False
-                         , optShowHelp = False
-                         , optNoExec = True
-                         , optScanOut  = False
-                         , optParserOut = False
+                         , optShowHelp    = False
+                         , optNoExec      = True
+                         , optScanOut     = False
+                         , optParserOut   = False
+                         , optDebug       = False
                          }
 
 options :: [OptDescr (Options -> Options)]
@@ -48,6 +51,9 @@ options =
   , Option ['s'] ["scanner"]
     (NoArg (\opts -> opts { optScanOut = True }))
     "show scan info"
+  , Option ['d'] ["debug"]
+    (NoArg (\opts -> opts { optDebug = True }))
+    "show debug info"
   ]
 
 compilerOpts :: [String] -> IO (Options, [String])
@@ -70,20 +76,22 @@ showParserOutput parseout =
        Right prog ->  hPutStrLn stdout $ show prog
 
 showHelp :: IO ()
-showHelp = hPutStrLn stderr $ show (usageInfo header options)
+showHelp = do
+  hPutStrLn stderr $ show (usageInfo header options) 
+  exitSuccess
   where header = "Usage: ewe [OPTION...] files..."
 
-execProg :: Bool -> Either String Prog -> IO ()
-execProg True _ = return ()
-execProg False (Right prog) = do
+execProg :: Options -> Bool -> Either String Prog -> IO ()
+execProg _    True   _           = return ()
+execProg opts False (Right prog) = do
    r <- execVM prog
    return ()
-   -- hPutStrLn stdout $ show r
-execProg False _ = return ()
+   when (optDebug opts) (hPutStrLn stdout $ show r)
+execProg _    False _ = return ()
 
 processFile :: Options -> FilePath -> IO ()
 processFile opts fp = do
-  -- hPutStrLn stdout $ "Processing file: " ++ fp
+  when (optDebug opts) (hPutStrLn stdout $ "Processing file: " ++ fp)
   fh   <- openFile fp ReadMode
   s    <- hGetContents fh
   let  scanout = runAlex s alexExec
@@ -94,7 +102,7 @@ processFile opts fp = do
   when (optScanOut opts)               (showScannerOutput scanout)
   when (optParserOut opts)             (showParserOutput pRes)
   when (not passGrammar)               (showErrorGrammar errGram)
-  when (optNoExec opts && passGrammar) (execProg errorParser pRes)
+  when (optNoExec opts && passGrammar) (execProg opts errorParser pRes)
   hClose fh
 
 showErrorGrammar :: String -> IO ()

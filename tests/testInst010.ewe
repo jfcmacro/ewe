@@ -1,6 +1,7 @@
 # testInst010
 # Object: Probe how the readStr and writeStr
-startTest: readStr(a,b)
-           writeStr(a)
+len:=100
+startTest: readStr(s,len)
+           writeStr(s)
 endTest:   halt
-equ a M[0] equ b M[20]
+equ len M[0] equ s M[1]
