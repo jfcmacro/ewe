@@ -1,8 +1,7 @@
 # testInst010
 # Object: Probe how the readStr and writeStr
 len:=20
-startTest: writeInt(len)
-           readStr(s,len)
+startTest: readStr(s,len)
            writeStr(s)
 endTest:   halt
 equ len M[0] equ s M[1]

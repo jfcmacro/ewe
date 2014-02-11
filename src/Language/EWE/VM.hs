@@ -206,11 +206,14 @@ execIWI (IWI mr ) state =
 execIRS :: String -> Instr -> StateVM -> StateVM
 execIRS s (IRS mr1 mr2) state =
   let ge'     = ge state
+      m       = mem state
       startP  = mRef mr1 ge'
-      lenStr  = mRef mr2 ge'
-      state'  = moveStrInMem s startP (startP + lenStr) state
-  in if lenStr >= 0
-     then state' { pc = incrPC state }
+      lenP    = mRef mr2 ge'
+      (m', v) = outMem lenP m
+      state'  = state { mem = m' }
+      state'' = moveStrInMem s startP (startP + v) state'
+  in if v >= 0
+     then state'' { pc = incrPC state }
      else error "IRS len is negative"
 
 moveStrInMem :: String -> Int -> Int -> StateVM -> StateVM
