@@ -104,7 +104,7 @@ execInstr (IMMI mr i) state =
   state { mem = inMem (mRef mr (ge state)) i (mem state)
         , pc  = incrPC state
         }
-execInstr (IMMS mr s) st = 
+execInstr (IMMS mr s) st =
   let base  = mRef mr (ge st)
       total = base + length s
       st'   = moveStrInMem s base total st
@@ -215,11 +215,13 @@ execIRS s (IRS mr1 mr2) state =
 
 moveStrInMem :: String -> Int -> Int -> StateVM -> StateVM
 moveStrInMem [] st en state
-  | st <= en   = moveStrInMem [] (st+1) en (state { mem = inMem st 0 (mem state) })
+  | st <= en   = moveStrInMem [] (st+1) en
+                        (state { mem = inMem st 0 (mem state) })
   | otherwise  = state
 moveStrInMem (c:cs) st en state
-  | st <= en   = moveStrInMem cs (st+1) en (state { mem = inMem st (ord c) (mem state) })
-  | otherwise  = state
+  | st <= en   = moveStrInMem cs (st+1) en
+                        (state { mem = inMem st (ord c) (mem state) })
+  | otherwise  = state { mem = inMem st 0 (mem state) }
 
 execIWS :: Instr -> StateVM -> (StateVM, String)
 execIWS (IWS mr) state =

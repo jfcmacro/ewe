@@ -38,22 +38,22 @@ options :: [OptDescr (Options -> Options)]
 options =
   [ Option ['v'] ["version"]
     (NoArg (\opts -> opts { optShowVersion  = True }))
-    "show version number"
+    "shows a version number and quits "
   , Option ['h', '?'] ["help"]
     (NoArg (\opts -> opts { optShowHelp = True }))
-    "show help menu"
+    "shows help menu and quits"
   , Option ['n'] ["noexec"]
     (NoArg (\opts -> opts { optNoExec = False }))
-    "execute the current file with ewe-vm"
+    "not execute the current file with ewe-vm"
   , Option ['p'] ["parser"]
     (NoArg (\opts -> opts { optParserOut = True }))
-    "show parser info"
+    "shows parser info"
   , Option ['s'] ["scanner"]
     (NoArg (\opts -> opts { optScanOut = True }))
-    "show scan info"
+    "shows scan info"
   , Option ['d'] ["debug"]
     (NoArg (\opts -> opts { optDebug = True }))
-    "show debug info"
+    "shows debug info"
   ]
 
 compilerOpts :: [String] -> IO (Options, [String])
@@ -77,7 +77,7 @@ showParserOutput parseout =
 
 showHelp :: IO ()
 showHelp = do
-  hPutStrLn stderr $ show (usageInfo header options) 
+  mapM_ (hPutStrLn stderr) (lines $ usageInfo header options) 
   exitSuccess
   where header = "Usage: ewe [OPTION...] files..."
 
@@ -98,7 +98,6 @@ processFile opts fp = do
        pRes   = pEWE s
        errorParser           = either (\_ -> True)  (\_ -> False) pRes
        (passGrammar,errGram) = either (\_ -> (False,[])) checkGrammar  pRes
-  when (optShowHelp opts)              (showHelp)
   when (optScanOut opts)               (showScannerOutput scanout)
   when (optParserOut opts)             (showParserOutput pRes)
   when (not passGrammar)               (showErrorGrammar errGram)
@@ -119,8 +118,11 @@ checkGrammar prog = let inh = Inh_Prog
 processStaticOptions :: Options -> IO ()
 processStaticOptions opts =
   if optShowVersion opts
-  then hPutStrLn stdout $ "ewe version: " ++ (showVersion version)
-  else return ()
+  then do hPutStrLn stdout $ "ewe version: " ++ (showVersion version)
+          exitSuccess          
+  else if optShowHelp opts
+       then showHelp
+       else return ()
 
 main :: IO ()
 main = do
