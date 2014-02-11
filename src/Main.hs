@@ -17,6 +17,7 @@ import Language.EWE.VM(runVM,execVM)
 import Language.EWE.CheckGrammar
 
 data Options =  Options { optShowVersion :: Bool
+                        , optShowHelp    :: Bool
                         , optNoExec      :: Bool
                         , optScanOut     :: Bool
                         , optParserOut   :: Bool
@@ -24,6 +25,7 @@ data Options =  Options { optShowVersion :: Bool
 
 defaultOptions :: Options
 defaultOptions = Options { optShowVersion = False
+                         , optShowHelp = False
                          , optNoExec = True
                          , optScanOut  = False
                          , optParserOut = False
@@ -31,9 +33,12 @@ defaultOptions = Options { optShowVersion = False
 
 options :: [OptDescr (Options -> Options)]
 options =
-  [ Option ['v','?'] ["version"]
+  [ Option ['v'] ["version"]
     (NoArg (\opts -> opts { optShowVersion  = True }))
     "show version number"
+  , Option ['h', '?'] ["help"]
+    (NoArg (\opts -> opts { optShowHelp = True }))
+    "show help menu"
   , Option ['n'] ["noexec"]
     (NoArg (\opts -> opts { optNoExec = False }))
     "execute the current file with ewe-vm"
@@ -64,6 +69,10 @@ showParserOutput parseout =
        Left  msg  ->  hPutStrLn stderr $ show msg
        Right prog ->  hPutStrLn stdout $ show prog
 
+showHelp :: IO ()
+showHelp = hPutStrLn stderr $ show (usageInfo header options)
+  where header = "Usage: ewe [OPTION...] files..."
+
 execProg :: Bool -> Either String Prog -> IO ()
 execProg True _ = return ()
 execProg False (Right prog) = do
@@ -81,6 +90,7 @@ processFile opts fp = do
        pRes   = pEWE s
        errorParser           = either (\_ -> True)  (\_ -> False) pRes
        (passGrammar,errGram) = either (\_ -> (False,[])) checkGrammar  pRes
+  when (optShowHelp opts)              (showHelp)
   when (optScanOut opts)               (showScannerOutput scanout)
   when (optParserOut opts)             (showParserOutput pRes)
   when (not passGrammar)               (showErrorGrammar errGram)

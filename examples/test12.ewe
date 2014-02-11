@@ -1,0 +1,31 @@
+# Example 2.5 From the K.D. Lee Book
+zero := 0
+one := 1
+littlea := 97
+littlez := 122
+diff := 32
+# s = input(),
+len := 100
+readStr(s, len)
+# i = 0
+i := 100
+# while s[i] != 0 {
+loop: tmp := M[i+0]
+if tmp = zero then goto end
+# if ('a' <= s[i] && s[i] <= 'z')
+if littlea > tmp then goto skip
+if tmp > littlez then goto skip
+#    s[i] = s[i] - 32;
+tmp := tmp - diff
+M[i+0] := tmp
+skip:
+# i++;
+i:=i+one
+goto loop
+# printf("%s", s)
+end: writeStr(s)
+halt
+
+equ zero M[0] equ one M[1] equ littlea M[2]
+equ littlez M[3] equ diff M[4] equ len M[5]
+equ s M[100] equ tmp M[6] equ i M[7]

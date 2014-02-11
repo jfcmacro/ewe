@@ -209,7 +209,7 @@ execIRS s (IRS mr1 mr2) state =
       startP  = mRef mr1 ge'
       lenStr  = mRef mr2 ge'
       state'  = moveStrInMem s startP (startP + lenStr) state
-  in if lenStr < 0
+  in if lenStr >= 0
      then state' { pc = incrPC state }
      else error "IRS len is negative"
 
