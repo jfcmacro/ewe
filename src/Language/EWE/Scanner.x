@@ -8,7 +8,7 @@ module Language.EWE.Scanner(Alex(..),
                             getPosn
                            ) where
 
-import Language.EWE.Token(Tkns,Tkn(..))
+import Language.EWE.Token(Tkns,Tkn(..),Tkn_(..))
 }
 
 %wrapper "monad"
@@ -49,10 +49,13 @@ tokens :-
        "equ"                        { returnResWrd }
        \" [^\"]* \"                 { returnStr }
        (($nozerodigit $digit*)| 0)  { returnInt }
---       $alpha [$alpha $digit]*\:    { returnLabel }
-       $alpha [$alpha $digit]*       { returnId }
+       $alpha [$alpha $digit]*      { returnId }
 
 {
+returnTkn :: Tkn_ -> AlexInput -> Int -> Alex Tkn
+returnTkn tkn _ _ = do pos <- getPosn 
+                       return $ Tkn pos tkn
+
 returnEOL :: AlexInput -> Int -> Alex Tkn
 returnEOL = returnTkn $ TknEOL
 
@@ -61,9 +64,6 @@ returnAssgn = returnTkn $ TknAssgn
 
 returnColon :: AlexInput -> Int -> Alex Tkn
 returnColon = returnTkn $ TknColon
-
-returnTkn :: Tkn -> AlexInput -> Int -> Alex Tkn
-returnTkn tkn _ _ = return $ tkn
 
 returnLPar :: AlexInput -> Int -> Alex Tkn
 returnLPar = returnTkn $ TknLPar
@@ -92,28 +92,27 @@ returnStr = returnFunction (TknStr . read)
 returnInt :: AlexInput -> Int -> Alex Tkn
 returnInt = returnFunction (TknInt . read)
 
--- returnLabel :: AlexInput -> Int -> Alex Tkn
--- returnLabel = returnFunction (TknLabel . init)
-
 returnId :: AlexInput -> Int -> Alex Tkn
 returnId = returnFunction TknId
 
 returnResWrd :: AlexInput -> Int -> Alex Tkn
 returnResWrd = returnFunction TknResWrd
 
-returnFunction :: (String -> Tkn) -> AlexInput -> Int -> Alex Tkn
-returnFunction f (_,_,_,s) i = return $ f (take i s)
+returnFunction :: (String -> Tkn_) -> AlexInput -> Int -> Alex Tkn
+returnFunction f (_,_,_,s) i = do pos <- getPosn
+                                  return $ (Tkn pos (f (take i s)))
 
 alexEOF :: Alex Tkn
-alexEOF = return $ TknEOF
+alexEOF = do pos <- getPosn
+             return $ Tkn pos TknEOF
 
 alexExec :: Alex Tkns
 alexExec = do
    t <- alexMonadScan
    case t of
-     TknEOF -> return $ [t]
-     _      -> do ts <- alexExec
-                  return (t:ts)
+     (Tkn pos TknEOF) -> return $ [t]
+     _                -> do ts <- alexExec
+                            return (t:ts)
 
 getPosn :: Alex (Int,Int)
 getPosn = do

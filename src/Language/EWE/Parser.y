@@ -2,7 +2,7 @@
 {-# OPTIONS -w #-}
 module Language.EWE.Parser(pEWE) where
 
-import Language.EWE.Token(Tkns,Tkn(..))
+import Language.EWE.Token(Tkns,Tkn(..), Tkn_(..))
 import Language.EWE.Scanner
 import Language.EWE.AbsSyn
 }
@@ -10,43 +10,42 @@ import Language.EWE.AbsSyn
 %name parse
 %tokentype { Tkn }
 %error     { parseError }
-%monad { Alex } 
-%lexer { lexwrap } { TknEOF }
+%monad { Alex }
+%lexer { lexwrap } { Tkn _ TknEOF }
 
-%token int        { TknInt $$ }
-       str        { TknStr $$ }  
---       label      { TknLabel $$ }
-       id         { TknId $$ }
-       ':='       { TknAssgn }
-       ':'        { TknColon }
-       '('        { TknLPar  }
-       ')'        { TknRPar  }
-       '['        { TknLBrk  }
-       ']'        { TknRBrk  }
-       ','        { TknComma }
-       '+'        { TknOper '+' }
-       '-'        { TknOper '-' }
-       '*'        { TknOper '*' }
-       '/'        { TknOper '/' }
-       '%'        { TknOper '%' }
-       '<>'       { TknCond "<>" }
-       '='        { TknCond "=" }
-       '<'        { TknCond "<" }
-       '<='       { TknCond "<=" }
-       '>'        { TknCond ">" }
-       '>='       { TknCond ">=" }
-       'PC'       { TknResWrd "PC" }
-       'M'        { TknResWrd "M" }
-       'readInt'  { TknResWrd "readInt" }
-       'writeInt' { TknResWrd "writeInt" }
-       'readStr'  { TknResWrd "readStr" }
-       'writeStr' { TknResWrd "writeStr" }
-       'goto'     { TknResWrd "goto" }
-       'if'        { TknResWrd "if" }
-       'then'     { TknResWrd "then" }
-       'halt'     { TknResWrd "halt" }
-       'break'    { TknResWrd "break" }
-       'equ'      { TknResWrd "equ" }
+%token int        { Tkn _ (TknInt $$) }
+       str        { Tkn _ (TknStr $$) }
+       id         { Tkn _ (TknId $$) }
+       ':='       { Tkn _ TknAssgn }
+       ':'        { Tkn _ TknColon }
+       '('        { Tkn _ TknLPar  }
+       ')'        { Tkn _ TknRPar  }
+       '['        { Tkn _ TknLBrk  }
+       ']'        { Tkn _ TknRBrk  }
+       ','        { Tkn _ TknComma }
+       '+'        { Tkn _ (TknOper '+') }
+       '-'        { Tkn _ (TknOper '-') }
+       '*'        { Tkn _ (TknOper '*') }
+       '/'        { Tkn _ (TknOper '/') }
+       '%'        { Tkn _ (TknOper '%') }
+       '<>'       { Tkn _ (TknCond "<>") }
+       '='        { Tkn _ (TknCond "=") }
+       '<'        { Tkn _ (TknCond "<") }
+       '<='       { Tkn _ (TknCond "<=") }
+       '>'        { Tkn _ (TknCond ">") }
+       '>='       { Tkn _ (TknCond ">=") }
+       'PC'       { Tkn _ (TknResWrd "PC") }
+       'M'        { Tkn _ (TknResWrd "M") }
+       'readInt'  { Tkn _ (TknResWrd "readInt") }
+       'writeInt' { Tkn _ (TknResWrd "writeInt") }
+       'readStr'  { Tkn _ (TknResWrd "readStr") }
+       'writeStr' { Tkn _ (TknResWrd "writeStr") }
+       'goto'     { Tkn _ (TknResWrd "goto") }
+       'if'       { Tkn _ (TknResWrd "if") }
+       'then'     { Tkn _ (TknResWrd "then") }
+       'halt'     { Tkn _ (TknResWrd "halt") }
+       'break'    { Tkn _ (TknResWrd "break") }
+       'equ'      { Tkn _ (TknResWrd "equ") }
 %%
 
 EweProg : Executable Equates { Prg $1 $2 }
@@ -71,7 +70,7 @@ Instr : MemRef ':=' int                           { IMMI $1 $3  }
       | 'M' '[' MemRef '+' int ']' ':=' MemRef    { IMMR $3 $5 $8 }
       | 'readInt' '(' MemRef ')'                  { IRI $3 }
       | 'writeInt' '(' MemRef ')'                 { IWI $3 }
-      | 'readStr' '(' MemRef ',' MemRef ')'       { IRS $3 $5 }  
+      | 'readStr' '(' MemRef ',' MemRef ')'       { IRS $3 $5 }
       | 'writeStr' '(' MemRef ')'                 { IWS $3 }
       | 'goto' int                                { IGI $2 }
       | 'goto' id                                 { IGS $2 }
@@ -111,4 +110,3 @@ parseError t = do
 pEWE :: String -> Either String Prog
 pEWE s = runAlex s parse
 }
-

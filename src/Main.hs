@@ -11,6 +11,7 @@ import System.Console.GetOpt
 import Data.Maybe(fromMaybe)
 import Control.Monad(when)
 import Language.EWE.Token
+import Language.EWE.TokenUtils
 import Language.EWE.Scanner
 import Language.EWE.Parser
 import Language.EWE.AbsSyn
@@ -67,7 +68,7 @@ showScannerOutput :: Either String Tkns -> IO ()
 showScannerOutput scanout =
    case scanout of
       Left err   -> hPutStrLn stderr $ "Scanner error: " ++ show err
-      Right tkns -> hPutStrLn stdout $ show tkns
+      Right tkns -> hPutStrLn stdout $ ppTokens tkns
 
 showParserOutput :: Either String Prog -> IO ()
 showParserOutput parseout =
