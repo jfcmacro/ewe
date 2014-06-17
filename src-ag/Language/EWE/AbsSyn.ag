@@ -48,8 +48,8 @@ data Instr | IMMI  dest :: MRef Int         -- Move a int into memory
            | IWS   oper :: MRef             -- Write a Str
            | IGI  Int                       -- Goto to line
            | IGS  String                    -- Goto sym
-           | IFI  bcond :: MRef Cond then :: MRef Int        -- If Cond then Int
-           | IFS  bcond :: MRef Cond then :: MRef String     --
+           | IFI  bcond :: MRef cond :: Cond then :: MRef Int        -- If Cond then Int
+           | IFS  bcond :: MRef cond :: Cond then :: MRef String     --
            | IH                             -- Halt
            | IB                             -- Break
            | INI

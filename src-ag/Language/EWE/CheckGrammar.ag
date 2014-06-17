@@ -105,6 +105,7 @@ sem Instr
   | INI   lhs.res = { Right () }
 
 include "AbsSyn.ag"
+include "PPProg.ag"
 
 {
 isLabelDef :: String -> Set.Set String ->  Either String ()

@@ -8,6 +8,7 @@ import System.Exit(ExitCode(..),exitSuccess)
 import Data.Version(Version(..), showVersion)
 import System.Exit(exitSuccess)
 import System.Console.GetOpt
+import Text.PrettyPrint
 import Data.Maybe(fromMaybe)
 import Control.Monad(when)
 import Language.EWE.Token
@@ -70,11 +71,11 @@ showScannerOutput scanout =
       Left err   -> hPutStrLn stderr $ "Scanner error: " ++ show err
       Right tkns -> hPutStrLn stdout $ ppTokens tkns
 
-showParserOutput :: Either String Prog -> IO ()
+showParserOutput :: Either String Doc -> IO ()
 showParserOutput parseout =
     case parseout of
        Left  msg  ->  hPutStrLn stderr $ show msg
-       Right prog ->  hPutStrLn stdout $ show prog
+       Right prog ->  hPutStrLn stdout $ render prog
 
 showHelp :: IO ()
 showHelp = do
@@ -97,10 +98,10 @@ processFile opts fp = do
   s    <- hGetContents fh
   let  scanout = runAlex s alexExec
        pRes   = pEWE s
-       errorParser           = either (\_ -> True)  (\_ -> False) pRes
-       (passGrammar,errGram) = either (\_ -> (False,[])) checkGrammar  pRes
+       errorParser               = either (\_ -> True)  (\_ -> False) pRes
+       (passGrammar,errGram,doc) = either (\_ -> (False,[],empty)) checkGrammar  pRes
   when (optScanOut opts)               (showScannerOutput scanout)
-  when (optParserOut opts)             (showParserOutput pRes)
+  when (optParserOut opts)             (showParserOutput doc)
   when (not passGrammar)               (showErrorGrammar errGram)
   when (optNoExec opts && passGrammar) (execProg opts errorParser pRes)
   hClose fh
@@ -109,12 +110,12 @@ showErrorGrammar :: String -> IO ()
 showErrorGrammar msg = do
    hPutStrLn stderr $ show msg
 
-checkGrammar :: Prog -> (Bool,String)
+checkGrammar :: Prog -> (Bool,String,Doc)
 checkGrammar prog = let inh = Inh_Prog
                         syn = wrap_Prog (sem_Prog prog) inh
                     in case (res_Syn_Prog syn) of
-                         Left msg -> (False, msg)
-                         Right () -> (True, [])
+                         Left msg -> (False, msg, empty)
+                         Right () -> (True, [], pp_Syn_Prog syn)
 
 processStaticOptions :: Options -> IO ()
 processStaticOptions opts =

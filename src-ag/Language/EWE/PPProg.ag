@@ -1,0 +1,127 @@
+imports
+{
+import Text.PrettyPrint
+}
+
+attr Prog
+  syn pp :: {Doc}
+
+attr Equates
+  syn  pp use {$$} {empty} :: {Doc}
+
+attr Equ
+  syn  pp :: {Doc}
+
+attr Stmts
+  syn pp use {($$)} {empty} :: {Doc}
+
+attr Instr
+  syn pp :: {Doc}
+
+attr Labels
+  syn pp :: {Doc}
+
+attr MRef
+  syn pp :: {Doc}
+
+attr Cond
+  syn pp :: {Doc}
+
+sem Equ
+  | Tuple lhs.pp = { text "equ" <+> nest 5 (text @x1)
+                                <+> nest 10 (text "M" <> brackets (int @x2)) }
+
+
+sem Labels
+  | Cons lhs.pp = { ptext @hd <> colon $$ @tl.pp }
+  | Nil  lhs.pp = { empty }
+
+sem Prog
+  | Prg lhs.pp = { @stms.pp $$ @equates.pp }
+
+
+sem Stmt
+  | Stmt lhs.pp = { @labels.pp $$ @inst.pp }
+
+sem MRef
+  | MRefI  lhs.pp = { text "M" <> brackets ( int @int ) }
+  | MRefId lhs.pp = { text "M" <>
+                      brackets (text @string) }
+
+sem Instr
+  | IMMI  lhs.pp = { @dest.pp <+> nest 5 (text ":=") <+> nest 5 (int @int) }
+  | IMMS  lhs.pp = { @dest.pp <+> nest 5 (text ":=")
+                              <+> nest 5 (doubleQuotes (text @string)) }
+  | IMRPC lhs.pp = { @dest.pp <+> nest 5 (text ":=")
+                              <+> nest 5 (text "PC")
+                              <+> char '+'
+                              <+> int @int
+                   }
+  | SPC   lhs.pp = { text "PC" <+> nest 5 (text ":=")
+                               <+> nest 5 @oper.pp
+                   }
+  | IMMM  lhs.pp = { @dest.pp <+> nest 5 (text ":=")
+                              <+> nest 5 @oper.pp
+                   }
+  | IAdd  lhs.pp = { @dest.pp <+> nest 5 (text ":=")
+                              <+> nest 5 @left.pp
+			      <+> char '+'
+			      <+> @right.pp
+                   }
+  | ISub  lhs.pp = { @dest.pp <+> nest 5 (text ":=")
+                              <+> nest 5 @left.pp
+			      <+> char '-'
+			      <+> @right.pp
+                   }
+  | IMul  lhs.pp = { @dest.pp <+> nest 5 (text ":=")
+                              <+> nest 5 @left.pp
+			      <+> char '*'
+			      <+> @right.pp
+                   }
+  | IDiv  lhs.pp = { @dest.pp <+> nest 5 (text ":=")
+                              <+> nest 5 @left.pp
+			      <+> char '/'
+			      <+> @right.pp
+                   }
+  | IMod  lhs.pp = { @dest.pp <+> nest 5 (text ":=")
+                              <+> nest 5 @left.pp
+			      <+> char '%'
+			      <+> @right.pp
+                   }
+  | IMRI  lhs.pp = { @dest.pp <+> nest 5 (text ":=")
+                              <+> nest 5 (char 'M')
+                              <> brackets (@oper.pp
+                                  <+> char '+'
+                                  <+> int @int)
+                   }
+  | IMMR  lhs.pp = { char 'M' <> brackets (@dest.pp
+                                            <+> char '+'
+                                            <+> int @int)
+                              <+> nest 5 (text ":=")
+                              <+> nest 5 @oper.pp
+                   }
+  | IRI   lhs.pp = { text "readInt" <> parens @oper.pp }
+  | IWI   lhs.pp = { text "writeInt" <> parens @oper.pp }
+  | IRS   lhs.pp = { text "readStr" <> parens (@left.pp <> comma
+                                                        <+> @right.pp) }
+  | IWS   lhs.pp = { text "writeStr" <> parens @oper.pp }
+  | IGI   lhs.pp = { text "goto" <+> int @int }
+  | IGS   lhs.pp = { text "goto" <+> text @string }
+  | IFI   lhs.pp = { text "if" <+> @bcond.pp <+> @cond.pp <+> @then.pp
+                               <+> text "then" <+> text "goto" <+> int @int }
+  | IFS   lhs.pp = { text "if" <+> @bcond.pp <+> @cond.pp <+> @then.pp
+                               <+> text "then" <+> text "goto"
+                               <+> text @string }
+  | IH    lhs.pp = { text "halt" }
+  | IB    lhs.pp = { text "break" }
+  | INI   lhs.pp = { empty }
+
+sem Cond
+  | CLET  lhs.pp = { text "<=" }
+  | CLT   lhs.pp = { char '<' }
+  | CGET  lhs.pp = { text ">=" }
+  | CGT   lhs.pp = { char '>' }
+  | CE    lhs.pp = { char '=' }
+  | CNE   lhs.pp = { text "<>" }
+
+-- include "AbsSyn.ag"
