@@ -8,7 +8,7 @@ import System.Exit(ExitCode(..),exitSuccess)
 import Data.Version(Version(..), showVersion)
 import System.Exit(exitSuccess)
 import System.Console.GetOpt
-import Text.PrettyPrint
+import Text.PrettyPrint(Doc(..),render,empty)
 import Data.Maybe(fromMaybe)
 import Control.Monad(when)
 import Language.EWE.Token
@@ -71,15 +71,15 @@ showScannerOutput scanout =
       Left err   -> hPutStrLn stderr $ "Scanner error: " ++ show err
       Right tkns -> hPutStrLn stdout $ ppTokens tkns
 
-showParserOutput :: Either String Doc -> IO ()
-showParserOutput parseout =
-    case parseout of
-       Left  msg  ->  hPutStrLn stderr $ show msg
-       Right prog ->  hPutStrLn stdout $ render prog
+showParserOutput :: (Bool,(String,Doc)) -> IO ()
+showParserOutput (False,(msg,_))   =
+ do hPutStrLn stderr $ show msg
+showParserOutput (True,(_,doc))  =
+ do hPutStrLn stdout $ render doc
 
 showHelp :: IO ()
 showHelp = do
-  mapM_ (hPutStrLn stderr) (lines $ usageInfo header options) 
+  mapM_ (hPutStrLn stderr) (lines $ usageInfo header options)
   exitSuccess
   where header = "Usage: ewe [OPTION...] files..."
 
@@ -98,10 +98,10 @@ processFile opts fp = do
   s    <- hGetContents fh
   let  scanout = runAlex s alexExec
        pRes   = pEWE s
-       errorParser               = either (\_ -> True)  (\_ -> False) pRes
-       (passGrammar,errGram,doc) = either (\_ -> (False,[],empty)) checkGrammar  pRes
+       errorParser                 = either (\_ -> True)  (\_ -> False) pRes
+       ckg@(passGrammar,(errGram,doc)) = either (\_ -> (False,([],empty))) checkGrammar pRes
   when (optScanOut opts)               (showScannerOutput scanout)
-  when (optParserOut opts)             (showParserOutput doc)
+  when (optParserOut opts)             (showParserOutput ckg)
   when (not passGrammar)               (showErrorGrammar errGram)
   when (optNoExec opts && passGrammar) (execProg opts errorParser pRes)
   hClose fh
@@ -110,18 +110,18 @@ showErrorGrammar :: String -> IO ()
 showErrorGrammar msg = do
    hPutStrLn stderr $ show msg
 
-checkGrammar :: Prog -> (Bool,String,Doc)
+checkGrammar :: Prog -> (Bool,(String,Doc))
 checkGrammar prog = let inh = Inh_Prog
                         syn = wrap_Prog (sem_Prog prog) inh
                     in case (res_Syn_Prog syn) of
-                         Left msg -> (False, msg, empty)
-                         Right () -> (True, [], pp_Syn_Prog syn)
+                         Left msg -> (False, (msg, empty))
+                         Right () -> (True, ([], pp_Syn_Prog syn))
 
 processStaticOptions :: Options -> IO ()
 processStaticOptions opts =
   if optShowVersion opts
   then do hPutStrLn stdout $ "ewe version: " ++ (showVersion version)
-          exitSuccess          
+          exitSuccess
   else if optShowHelp opts
        then showHelp
        else return ()
