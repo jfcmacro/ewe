@@ -5,16 +5,21 @@ import Language.EWE.AbsSyn
 import Language.EWE.Utils(emptyProg, equates, stms)
 import qualified Data.List as L
 import qualified Data.Maybe as M
+import qualified Data.Map.Strict as Map
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Class(lift)
 import Data.Char (ord,chr)
 import System.IO(hFlush, stdout,hPutStrLn,hPutStr)
 import System.Exit(exitWith,ExitCode(..))
 
-type Memory = [(Int,Int)]
+-- type Memory = [(Int,Int)]
+type Memory = Map.Map Int Int
 
 emptyMemory :: Memory
-emptyMemory = []
+emptyMemory = Map.empty
+
+-- emptyMemory :: Memory
+-- emptyMemory = []
 
 type PC = Int
 
@@ -51,11 +56,17 @@ mRef :: MRef -> Equates -> Int
 mRef (MRefI i) _  = i
 mRef (MRefId s) m = M.fromMaybe (error $ "Internal error: memory reference " ++ s ++ " not found ") $ L.lookup s m
 
+-- outMem :: Int -> Memory -> (Memory,Int)
+-- outMem r m = M.maybe ((r,0):m, 0) ((,) m) (L.lookup r m)
+
 outMem :: Int -> Memory -> (Memory,Int)
-outMem r m = M.maybe ((r,0):m, 0) (\i -> (m,i)) (L.lookup r m)
+outMem r m = M.maybe (Map.insert r 0 m, 0) ((,) m) (Map.lookup r m)
+
+-- inMem :: Int -> Int -> Memory -> Memory
+-- inMem i v m = (i,v):m
 
 inMem :: Int -> Int -> Memory -> Memory
-inMem i v m = (i,v):m
+inMem = Map.insert
 
 incrPC :: StateVM -> Int
 incrPC state = (pc state) + 1
