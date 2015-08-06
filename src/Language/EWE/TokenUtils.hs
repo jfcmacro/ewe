@@ -20,6 +20,7 @@ ppTkn_ (TknStr s)  = text "String:"     <+> text s
 ppTkn_ (TknId  s)  = text "Id:"         <+> text s
 ppTkn_ (TknAssgn)  = text "Operator:"   <+> text ":="
 ppTkn_ (TknColon)  = text "Operator:"   <+> text ":"
+ppTkn_ (TknComma)  = text "Separator:"  <+> text ","
 ppTkn_ (TknLPar)   = text "Separator:"  <+> text "("
 ppTkn_ (TknRPar)   = text "Separator:"  <+> text ")"
 ppTkn_ (TknLBrk)   = text "Separator:"  <+> text "["
@@ -29,3 +30,4 @@ ppTkn_ (TknCond s) = text "Coditional:" <+> text s
 ppTkn_ (TknResWrd s) = text "Reserved Word:" <+> text s
 ppTkn_ (TknEOL)    = text "<EOL>"
 ppTkn_ (TknEOF)    = text "<EOF>"
+-- ppTkn_ last          = error ("Token: " ++ (show last))

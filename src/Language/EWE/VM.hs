@@ -84,7 +84,7 @@ evalInstr = do
   if (hasSideEffects ci)
     then case (ci) of
          (IRI _)   -> do
-             i <- lift $ readInt "Enter an integer:"
+             i <- lift $ readInt "Enter an integer: "
              let st'' = execIRI i ci st
              put st''
              evalInstr
@@ -94,7 +94,7 @@ evalInstr = do
              put st''
              evalInstr
          (IRS _ _) -> do
-           s <- lift $ readStr "Enter an string:"
+           s <- lift $ readStr "Enter a string: "
            let st'' = execIRS s ci st
            put st''
            evalInstr
