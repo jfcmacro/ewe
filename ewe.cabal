@@ -14,17 +14,22 @@ maintainer:          fcardona@eafit.edu.co
 category:            Language
 build-type:          Simple
 cabal-version:       >=1.8
-extra-source-files:  src-ag/Language/EWE/CheckGrammar.ag src-ag/Language/EWE/AbsSyn.ag
+extra-source-files:  
+   src-ag/Language/EWE/CheckGrammar.ag  
+   src-ag/Language/EWE/PPProg.ag
+   src-ag/Language/EWE/AbsSyn.ag
+   uuagc_options                  
 
 executable ewe
   main-is:          Main.hs
+  hs-source-dirs:
+      app, src, src-ag
   Build-depends:    base >=4.5 && < 5,
                     transformers >=0.3,
                     mtl >= 2.1,
                     containers >= 0.4.2,
                     array >= 0.4.0.0,
                     pretty >= 1.1
-  hs-source-dirs:   src, src-ag
   build-tools:      alex, happy
   other-modules:    Language.EWE.AbsSyn,
                     Language.EWE.Utils,
@@ -34,6 +39,7 @@ executable ewe
                     Language.EWE.Scanner,
                     Language.EWE.CheckGrammar,
                     Language.EWE.Parser
+  
   x-agmodule:       file: "src-ag/Language/EWE/AbsSyn.ag" options : data, pretty, haskellsyntax, module "Language.EWE.AbsSyn", output "src/Language/EWE/AbsSyn.hs"
   x-agmodule:       file: "src-ag/Language/EWE/CheckGrammar.ag" options : semfuns, pretty, haskellsyntax, catas, wrappers, signatures, module "Language.EWE.CheckGrammar", output "src/Language/EWE/CheckGrammar.hs"
 
