@@ -54,7 +54,7 @@ Executable : LabelInstr              { [$1] }
            | LabelInstr Executable   { $1:$2 }
 
 LabelInstr : id ':' LabelInstr        { addLabel $1 $3 }
-           | Instr                   { Stmt [] $1 }
+           | Instr                    { Stmt [] $1 }
 
 Instr : MemRef ':=' int                           { IMMI $1 $3  }
       | MemRef ':=' str                           { IMMS $1 $3  }
