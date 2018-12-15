@@ -12,12 +12,19 @@ author:              Juan Francisco Cardona McCormick
 maintainer:          fcardona@eafit.edu.co
 -- copyright:
 category:            Language
-build-type:          Simple
+build-type:          Custom
 cabal-version:       >=1.8
+stability:           experimental
 extra-source-files:  
    src-ag/Language/EWE/CheckGrammar.ag  
    src-ag/Language/EWE/PPProg.ag
-   src-ag/Language/EWE/AbsSyn.ag  
+   src-ag/Language/EWE/AbsSyn.ag
+tested-with: GHC == 8.2.2
+
+custom-setup
+        setup-depends: base >= 4.5 && < 5,
+                       uuagc-cabal >= 1.1.0.0,
+                       Cabal >= 1.8                 
 
 executable ewe
   main-is:          Main.hs
@@ -28,8 +35,9 @@ executable ewe
                     mtl >= 2.1,
                     containers >= 0.4.2,
                     array >= 0.4.0.0,
-                    pretty >= 1.1
-  build-tools:      alex, happy
+                    pretty >= 1.1,
+                    uuagc-cabal >= 1.1.0.0
+  build-tools:      alex, happy, uuagc
   other-modules:    Language.EWE.AbsSyn,
                     Language.EWE.Utils,
                     Language.EWE.VM,
@@ -39,8 +47,8 @@ executable ewe
                     Language.EWE.CheckGrammar,
                     Language.EWE.Parser
   
-  x-agmodule:       file: "src-ag/Language/EWE/AbsSyn.ag" options : data, pretty, haskellsyntax, module "Language.EWE.AbsSyn", output "src/Language/EWE/AbsSyn.hs"
-  x-agmodule:       file: "src-ag/Language/EWE/CheckGrammar.ag" options : semfuns, pretty, haskellsyntax, catas, wrappers, signatures, module "Language.EWE.CheckGrammar", output "src/Language/EWE/CheckGrammar.hs"
+  x-agmodule:       file: "src-ag/Language/EWE/AbsSyn.ag" options : data, pretty, haskellsyntax, module "Language.EWE.AbsSyn" -- , output "src/Language/EWE/AbsSyn.hs"
+  x-agmodule:       file: "src-ag/Language/EWE/CheckGrammar.ag" options : semfuns, pretty, haskellsyntax, catas, wrappers, signatures, module "Language.EWE.CheckGrammar" -- , output "src/Language/EWE/CheckGrammar.hs"
 
 source-repository head
   type:	    git
