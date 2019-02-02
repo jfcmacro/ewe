@@ -24,6 +24,8 @@ tested-with: GHC == 8.2.2
 custom-setup
         setup-depends: base >= 4.5 && < 5,
                        uuagc-cabal >= 1.1.0.0,
+                       uulib >= 0.9.23,
+                       uuagc >= 0.9.52.1,
                        Cabal >= 1.8                 
 
 executable ewe
