@@ -12,14 +12,10 @@ import Data.Char (ord,chr)
 import System.IO(hFlush, stdout,hPutStrLn,hPutStr)
 import System.Exit(exitWith,ExitCode(..))
 
--- type Memory = [(Int,Int)]
 type Memory = Map.Map Int Int
 
 emptyMemory :: Memory
 emptyMemory = Map.empty
-
--- emptyMemory :: Memory
--- emptyMemory = []
 
 type PC = Int
 
@@ -29,11 +25,15 @@ initPC = 0
 data StateVM = StVM { mem :: Memory
                     , prg :: Prog
                     , pc  :: PC
+                    , debug :: Bool
+                    , steps :: Int
                     } deriving (Show)
 
 emptyStateVM = StVM { mem = emptyMemory
-                    , pc  = initPC
                     , prg = emptyProg
+                    , pc  = initPC
+                    , debug = False
+                    , steps = 0
                     }
 
 type StateVMM = StateT StateVM IO
