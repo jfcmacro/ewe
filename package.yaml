@@ -9,8 +9,8 @@ author:              Juan Francisco Cardona McCormick
 maintainer:          fcardona@eafit.edu.co
 category:            Language
 
-extra-source-files:  
-   - src-ag/Language/EWE/CheckGrammar.ag  
+extra-source-files:
+   - src-ag/Language/EWE/CheckGrammar.ag
    - src-ag/Language/EWE/PPProg.ag
    - src-ag/Language/EWE/AbsSyn.ag
 
